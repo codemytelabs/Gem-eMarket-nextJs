@@ -1,24 +1,23 @@
-"use client";
-
 import "./globals.css";
 import { Inter } from "next/font/google";
-import { usePathname } from "next/navigation";
-import Layout from "@/components/layout/layout";
+import { AppThemeProvider } from "./theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const metadata = {
+  title: "Gem LK",
+  description: "Gem LK is a platform for buying and selling gems and jewelry.",
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const isAuthPage = pathname === "/login" || pathname === "/register";
-
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        {isAuthPage ? children : <Layout>{children}</Layout>}
+        <AppThemeProvider>{children}</AppThemeProvider>
       </body>
     </html>
   );

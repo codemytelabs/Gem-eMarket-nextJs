@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { categories, featuredLinks } from "@/config/const/navLinks";
 import { useThemeStore } from "@/store/themeStore";
+import { useTheme } from "next-themes";
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,6 +38,8 @@ export default function Navigation() {
 
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { theme, setTheme } = useTheme();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -55,6 +58,17 @@ export default function Navigation() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const changeTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+    toggleDarkMode();
+    console.log(
+      "zustand theme: ",
+      toggleDarkMode,
+      "ThemeProvider theme: ",
+      theme,
+    );
+  };
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -317,7 +331,7 @@ export default function Navigation() {
 
             {/* Dark Mode Toggle */}
             <button
-              onClick={toggleDarkMode}
+              onClick={changeTheme}
               className={`p-1 rounded-full ${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}
             >
               {isDarkMode ? (

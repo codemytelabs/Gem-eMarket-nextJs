@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import React from "react";
-import { useThemeStore } from "@/store/themeStore";
 import { colors } from "@/lib/theme/colors";
 
 interface CustomerServiceLayoutProps {
@@ -12,8 +11,6 @@ interface CustomerServiceLayoutProps {
 export default function CustomerServiceLayout({
   children,
 }: CustomerServiceLayoutProps) {
-  const { isDarkMode } = useThemeStore();
-
   const sidebarLinks = [
     { href: "/help-center/contact", label: "Contact Us" },
     { href: "/help-center/faq", label: "FAQ" },
@@ -24,11 +21,9 @@ export default function CustomerServiceLayout({
 
   return (
     <div className="flex flex-col md:flex-row w-full">
-      <aside
-        className={`md:w-64 flex-shrink-0 p-4 ${isDarkMode ? "bg-gray-900" : "bg-gray-100"} border-r ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}
-      >
+      <aside className="md:w-64 flex-shrink-0 p-4 bg-gray-100 dark:bg-gray-900 border-r dark:border-gray-700 border-gray-200">
         <h2
-          className={`text-lg font-semibold mb-4 ${isDarkMode ? "text-white" : colors.neutral.text}`}
+          className={`text-lg font-semibold mb-4 text-${colors.neutral.text} dark:text-white`}
         >
           Help Center
         </h2>
@@ -38,11 +33,7 @@ export default function CustomerServiceLayout({
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className={`block px-3 py-2 rounded-md transition-colors ${
-                    isDarkMode
-                      ? "text-gray-300 hover:bg-gray-800 hover:text-white"
-                      : `text-${colors.neutral.text} hover:bg-${colors.primary.light} hover:text-white`
-                  }`}
+                  className={`block px-3 py-2 rounded-md transition-colors text-${colors.neutral.text} hover:bg-${colors.primary.light} hover:text-white dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white`}
                 >
                   {link.label}
                 </Link>
@@ -53,7 +44,7 @@ export default function CustomerServiceLayout({
       </aside>
 
       <main
-        className={`flex-grow p-6 ${isDarkMode ? "bg-gray-800 text-gray-200" : `bg-${colors.neutral.background} text-${colors.neutral.text}`}`}
+        className={`flex-grow p-6 bg-${colors.neutral.background} text-${colors.neutral.text} dark:bg-gray-800 dark:text-gray-200`}
       >
         {children}
       </main>
