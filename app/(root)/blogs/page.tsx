@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { IBlog } from "@/types";
+import Image from "next/image";
 
 // Fetch blogs from the API
 async function getBlogs() {
@@ -46,7 +47,7 @@ function FeaturedBlog({ blog }: { blog: IBlog }) {
     <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
       <div className="md:flex">
         <div className="md:w-1/2">
-          <img
+          <Image
             src={blog.images[0]}
             alt={blog.title}
             className="w-full h-64 md:h-full object-cover"
@@ -96,7 +97,7 @@ function FeaturedBlog({ blog }: { blog: IBlog }) {
 function BlogCard({ blog }: { blog: IBlog }) {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <img
+      <Image
         src={blog.images[0]}
         alt={blog.title}
         className="w-full h-48 object-cover"
@@ -159,7 +160,7 @@ async function BlogsListing() {
                 key={blog.id}
                 className="min-w-[300px] max-w-xs bg-white rounded-lg shadow p-4 flex-shrink-0"
               >
-                <img
+                <Image
                   src={blog.images[0]}
                   alt={blog.title}
                   className="w-full h-40 object-cover rounded"

@@ -15,6 +15,13 @@ import {
   Globe,
   Bell,
   MessageCircle,
+  Gem,
+  Circle,
+  Sparkles,
+  Crown,
+  Store,
+  Settings,
+  Plus,
 } from "lucide-react";
 import { colors } from "@/lib/theme/colors";
 import { Input } from "@/components/ui/input";
@@ -136,23 +143,91 @@ export default function Navigation() {
           <div className="grid grid-cols-3 gap-6">
             {categories
               .find((c) => c.id === hoveredCategory)
-              ?.subcategories.map((subcat) => (
-                <div key={subcat.id} className="flex flex-col items-center">
-                  <div className="mb-2 w-24 h-24 overflow-hidden rounded-lg border border-gray-200">
-                    <img
-                      src={`/api/placeholder/96/96`}
-                      alt={subcat.name}
-                      className="w-full h-full object-cover"
-                    />
+              ?.subcategories.map((subcat) => {
+                // Get appropriate icon for each category and subcategory
+                const getCategoryIcon = (
+                  categoryId: string,
+                  subcatId: string,
+                ) => {
+                  // Special case for "New Sellers" - show big plus icon
+                  if (categoryId === "sellers" && subcatId === "new") {
+                    return (
+                      <Plus
+                        className="w-16 h-16"
+                        style={{ color: colors.accent.features }}
+                      />
+                    );
+                  }
+
+                  // Regular category icons
+                  switch (categoryId) {
+                    case "gems":
+                      return (
+                        <Gem
+                          className="w-12 h-12"
+                          style={{ color: colors.primary.main }}
+                        />
+                      );
+                    case "precious-metals":
+                      return (
+                        <Circle
+                          className="w-12 h-12"
+                          style={{ color: colors.secondary.main }}
+                        />
+                      );
+                    case "jewellery":
+                      return (
+                        <Crown
+                          className="w-12 h-12"
+                          style={{ color: colors.accent.premium }}
+                        />
+                      );
+                    case "services":
+                      return (
+                        <Settings
+                          className="w-12 h-12"
+                          style={{ color: colors.accent.features }}
+                        />
+                      );
+                    case "sellers":
+                      return (
+                        <Store
+                          className="w-12 h-12"
+                          style={{ color: colors.primary.dark }}
+                        />
+                      );
+                    default:
+                      return (
+                        <Sparkles
+                          className="w-12 h-12"
+                          style={{ color: colors.primary.main }}
+                        />
+                      );
+                  }
+                };
+
+                return (
+                  <div key={subcat.id} className="flex flex-col items-center">
+                    <Link href={subcat.href} className="group">
+                      <div
+                        className={`mb-2 w-24 h-24 rounded-lg border-2 flex items-center justify-center transition-all duration-200 group-hover:scale-105 ${
+                          isDarkMode
+                            ? "bg-gray-800 border-gray-600 group-hover:border-gray-500"
+                            : "bg-gray-100 border-gray-300 group-hover:border-gray-400"
+                        }`}
+                      >
+                        {getCategoryIcon(hoveredCategory, subcat.id)}
+                      </div>
+                    </Link>
+                    <Link
+                      href={subcat.href}
+                      className={`text-center py-1 ${isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-primary-600"}`}
+                    >
+                      {subcat.name}
+                    </Link>
                   </div>
-                  <Link
-                    href={subcat.href}
-                    className={`text-center py-1 ${isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-primary-600"}`}
-                  >
-                    {subcat.name}
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
           </div>
         </div>
       </div>
@@ -352,7 +427,7 @@ export default function Navigation() {
               />
               <span
                 className="absolute -top-2 -right-2 rounded-full h-5 w-5 flex items-center justify-center text-xs text-white"
-                style={{ backgroundColor: colors.accent.premium }}
+                style={{ backgroundColor: "red" }}
               >
                 5
               </span>
@@ -384,7 +459,6 @@ export default function Navigation() {
                 className="h-5 w-5"
                 style={{ color: colors.accent.premium }}
               />
-              <span className="ml-1">Saved</span>
             </Link>
 
             {/* Coins Link (Replacing Cart) */}
@@ -396,7 +470,6 @@ export default function Navigation() {
                 className="h-5 w-5"
                 style={{ color: colors.secondary.main }}
               />
-              <span className="ml-1">Coins</span>
               <span
                 className="absolute -top-2 -right-2 rounded-full h-5 w-5 flex items-center justify-center text-xs text-white"
                 style={{ backgroundColor: colors.accent.premium }}
