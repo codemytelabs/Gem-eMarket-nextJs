@@ -1,22 +1,24 @@
 export const colors = {
   primary: {
-    main: "#3498db", // Ocean Blue
-    light: "#5dade2",
-    dark: "#2980b9",
+    main: "#1F4E8C", // Royal Blue
+    light: "#4A7FC2",
+    dark: "#173D70",
   },
   secondary: {
-    main: "#e67e22", // Orange
-    light: "#f39c12",
-    dark: "#d35400",
+    main: "#9CA8B8", // Platinum
+    light: "#C2CBD6",
+    dark: "#7E8CA0",
   },
   neutral: {
-    background: "#f5f5f5", // Light Gray
-    text: "#34495e", // Dark Charcoal
-    lightText: "#7f8c8d",
+    background: "#F3F5F8",
+    surface: "#FFFFFF",
+    border: "#E1E6ED",
+    text: "#1F2937",
+    lightText: "#6B7785",
   },
   accent: {
-    premium: "#9b59b6", // Purple
-    features: "#1abc9c", // Teal
+    premium: "#9B2242", // Ruby
+    features: "#1F7A5C", // Emerald
   },
 };
 

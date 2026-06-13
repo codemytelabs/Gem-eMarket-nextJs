@@ -34,12 +34,24 @@ export const categories = [
     id: "precious-metals",
     name: "Precious Metals",
     subcategories: [
-      { id: "all", name: "All Metals", href: "/metals" },
-      { id: "gold", name: "Gold", href: "/metals?type=gold" },
-      { id: "silver", name: "Silver", href: "/metals?type=silver" },
-      { id: "platinum", name: "Platinum", href: "/metals?type=platinum" },
-      { id: "palladium", name: "Palladium", href: "/metals?type=palladium" },
-      { id: "other-metals", name: "Other", href: "/metals?type=other" },
+      { id: "all", name: "All Metals", href: "/precious-metals" },
+      { id: "gold", name: "Gold", href: "/precious-metals?type=gold" },
+      { id: "silver", name: "Silver", href: "/precious-metals?type=silver" },
+      {
+        id: "platinum",
+        name: "Platinum",
+        href: "/precious-metals?type=platinum",
+      },
+      {
+        id: "palladium",
+        name: "Palladium",
+        href: "/precious-metals?type=palladium",
+      },
+      {
+        id: "other-metals",
+        name: "Other",
+        href: "/precious-metals?type=other",
+      },
     ],
   },
   {

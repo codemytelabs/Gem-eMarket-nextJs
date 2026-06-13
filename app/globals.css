@@ -1,28 +1,73 @@
 @import "tailwindcss";
 
-:root {
-  /* Primary Colors */
-  --color-primary: #3498db;
-  --color-primary-light: #5dade2;
-  --color-primary-dark: #2980b9;
-  
-  /* Secondary Colors */
-  --color-secondary: #f1c40f;
-  --color-secondary-light: #f4d03f;
-  --color-secondary-dark: #d4ac0d;
-  
-  /* Neutral Colors */
-  --color-background: #f5f5f5;
-  --color-text: #34495e;
-  --color-light-text: #7f8c8d;
-  
-  /* Accent Colors */
-  --color-premium: #9b59b6;
-  --color-features: #1abc9c;
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Primary - Royal Blue */
+  --color-primary-50: #eaf1f8;
+  --color-primary-100: #cfe0ef;
+  --color-primary-200: #a3c2df;
+  --color-primary-300: #76a3ce;
+  --color-primary-400: #4a7fc2;
+  --color-primary-500: #2f5fa0;
+  --color-primary-600: #1f4e8c;
+  --color-primary-700: #173d70;
+  --color-primary-800: #102c54;
+  --color-primary-900: #0a1d38;
+  --color-primary: #1f4e8c;
+  --color-primary-light: #4a7fc2;
+  --color-primary-dark: #173d70;
+
+  /* Secondary - Platinum */
+  --color-secondary-50: #f7f8fa;
+  --color-secondary-100: #edf0f3;
+  --color-secondary-200: #dbe1e8;
+  --color-secondary-300: #c2cbd6;
+  --color-secondary-400: #aab6c4;
+  --color-secondary-500: #9ca8b8;
+  --color-secondary-600: #7e8ca0;
+  --color-secondary-700: #636f82;
+  --color-secondary-800: #4a5566;
+  --color-secondary-900: #333b49;
+  --color-secondary: #9ca8b8;
+  --color-secondary-light: #c2cbd6;
+  --color-secondary-dark: #7e8ca0;
+
+  /* Accents */
+  --color-premium: #9b2242;
+  --color-features: #1f7a5c;
+
+  /* Neutrals */
+  --color-background: #f3f5f8;
+  --color-surface: #ffffff;
+  --color-border: #e1e6ed;
+  --color-text: #1f2937;
+  --color-light-text: #6b7785;
+}
+
+.dark {
+  --color-background: #0d1b2e;
+  --color-surface: #16263d;
+  --color-border: #28384f;
+  --color-text: #e5e9ef;
+  --color-light-text: #9aa7b8;
+
+  --color-primary: #4a7fc2;
+  --color-primary-light: #76a3ce;
+  --color-primary-dark: #1f4e8c;
+
+  --color-secondary: #c2cbd6;
+  --color-secondary-light: #dbe1e8;
+  --color-secondary-dark: #9ca8b8;
+
+  --color-premium: #c8506e;
+  --color-features: #3fa784;
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-text);
-  font-family: Arial, Helvetica, sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }

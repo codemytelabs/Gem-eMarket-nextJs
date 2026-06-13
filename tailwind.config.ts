@@ -22,6 +22,8 @@ module.exports = {
         },
         neutral: {
           background: colors.neutral.background,
+          surface: colors.neutral.surface,
+          border: colors.neutral.border,
           text: colors.neutral.text,
           lightText: colors.neutral.lightText,
         },
