@@ -1,0 +1,520 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+model User {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  emailVerified       DateTime?
+  phone               String?   @unique
+  phoneVerified       Boolean   @default(false)
+  name                String
+  passwordHash        String?
+  role                Role      @default(BUYER)
+  isVerified          Boolean   @default(false)
+  verifiedAt          DateTime?
+  avatarUrl           String?
+  // Seller-specific fields
+  shopSlug            String?   @unique
+  shopBio             String?
+  shopBannerUrl       String?
+  whatsappNumber      String?
+  locationCity        String?
+  specialties         String[]
+  // Social / SEO (Dealer plan)
+  shopMetaTitle       String?
+  shopMetaDescription String?
+  // Timestamps
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  subscription           SellerSubscription?
+  listings               Listing[]
+  enquiriesReceived      Enquiry[]              @relation("SellerEnquiries")
+  enquiriesSent          Enquiry[]              @relation("BuyerEnquiries")
+  verificationRequest    VerificationRequest?
+  boosts                 ListingBoost[]
+  metalPriceAlerts       MetalPriceAlert[]
+  blogPostsAuthored      BlogPost[]             @relation("BlogAuthor")
+  blogPostsSponsored     BlogPost[]             @relation("BlogSponsor")
+  analyticsDaily         SellerAnalyticsDaily[]
+  referralsMade          Referral[]             @relation("ReferrerSeller")
+  referralReceived       Referral?              @relation("ReferredSeller")
+  couponRedemptions      CouponRedemption[]
+  socialShareQueue       SocialShareQueue[]
+  whatsappBroadcastOptIns WhatsappBroadcastOptIn[] @relation("SellerOptIns")
+  whatsappBroadcastSubs  WhatsappBroadcastOptIn[] @relation("BuyerOptIns")
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  SELLER
+  BUYER
+}
+
+// ─── Subscriptions ────────────────────────────────────────────────────────────
+
+model SubscriptionPlan {
+  id                     String   @id @default(cuid())
+  name                   String   @unique // free | basic | pro | dealer
+  displayName            String
+  priceUsd               Decimal  @db.Decimal(8, 2)
+  priceLkr               Decimal  @db.Decimal(10, 2)
+  maxListings            Int?     // null = unlimited
+  maxReelsPerMonth       Int?     // null = unlimited
+  hasShopProfile         Boolean  @default(false)
+  hasAnalytics           Boolean  @default(false)
+  hasRealtimeAlerts      Boolean  @default(false)
+  hasDigitalMarketing    Boolean  @default(false)  // auto social share queue
+  hasWhatsappBroadcast   Boolean  @default(false)  // Phase 4
+  hasPrioritySearch      Boolean  @default(false)
+  hasApiAccess           Boolean  @default(false)
+  hasWholesaleListings   Boolean  @default(false)
+  listingDurationDays    Int?     // null = never expires (Dealer). Free=30, Basic=90, Pro=180
+  monthlyFreeBoosts      Int      @default(0)
+  freeBoostsRemaining    Int      @default(0)
+  supportLevel           String   @default("community") // community | email | priority | dedicated
+  badgeFastTrack         Boolean  @default(false)
+  badgeFree              Boolean  @default(false) // Dealer gets free badge
+  homepageFeatureWeekly  Boolean  @default(false) // Dealer weekly rotation
+  isActive               Boolean  @default(true)
+  sortOrder              Int      @default(0)
+  createdAt              DateTime @default(now())
+
+  subscriptions SellerSubscription[]
+  coupons       CouponCode[]          @relation("PlanCoupons")
+
+  @@map("subscription_plans")
+}
+
+model SellerSubscription {
+  id                   String             @id @default(cuid())
+  sellerId             String             @unique
+  planId               String
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  freeBoostsRemaining  Int                @default(0)
+  stripeSubscriptionId String?
+  payhereOrderId       String?
+  couponRedemptionId   String?            @unique
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  seller           User             @relation(fields: [sellerId], references: [id])
+  plan             SubscriptionPlan @relation(fields: [planId], references: [id])
+  couponRedemption CouponRedemption? @relation(fields: [couponRedemptionId], references: [id])
+
+  @@map("seller_subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PAST_DUE
+  TRIALING
+}
+
+// ─── Coupon Codes ─────────────────────────────────────────────────────────────
+
+model CouponCode {
+  id                 String       @id @default(cuid())
+  code               String       @unique
+  description        String?
+  discountType       DiscountType
+  discountValue      Decimal      @db.Decimal(8, 2) // % (0-100), USD amount, or months
+  applicablePlanIds  String[]     // empty = all plans
+  maxUses            Int?         // null = unlimited
+  usesCount          Int          @default(0)
+  maxUsesPerUser     Int          @default(1)
+  validFrom          DateTime?
+  validUntil         DateTime?
+  isActive           Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+
+  redemptions CouponRedemption[]
+  plans       SubscriptionPlan[] @relation("PlanCoupons")
+
+  @@map("coupon_codes")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_USD
+  FREE_MONTHS
+}
+
+model CouponRedemption {
+  id                  String   @id @default(cuid())
+  couponId            String
+  userId              String
+  discountAppliedUsd  Decimal  @db.Decimal(8, 2)
+  discountAppliedLkr  Decimal  @db.Decimal(10, 2)
+  redeemedAt          DateTime @default(now())
+
+  coupon       CouponCode          @relation(fields: [couponId], references: [id])
+  user         User                @relation(fields: [userId], references: [id])
+  subscription SellerSubscription?
+
+  @@unique([couponId, userId])
+  @@map("coupon_redemptions")
+}
+
+// ─── Listings ─────────────────────────────────────────────────────────────────
+
+model Listing {
+  id                  String        @id @default(cuid())
+  sellerId            String
+  title               String
+  slug                String        @unique
+  description         String
+  price               Decimal       @db.Decimal(12, 2)
+  currency            String        @default("USD")
+  images              String[]
+  category            ListingCategory
+  gemType             String?
+  gemOrigin           String?       @default("Sri Lanka")
+  caratWeight         Decimal?      @db.Decimal(8, 3)
+  treatmentStatus     String?       // unheated | heated | beryllium | fracture-filled
+  certificationBody   String?       // GIA | AGL | Gübelin | SSEF | GIT | NGJA
+  certificationNumber String?
+  metalType           String?
+  metalPurity         String?
+  weightGrams         Decimal?      @db.Decimal(8, 3)
+  // Status
+  status              ListingStatus @default(ACTIVE)
+  isWholesale         Boolean       @default(false)
+  // Boost
+  isBoosted           Boolean       @default(false)
+  boostEndAt          DateTime?
+  // SEO
+  metaTitle           String?
+  metaDescription     String?
+  schemaMarkup        Json?
+  // Homepage feature (Dealer)
+  isFeaturedHomepage  Boolean       @default(false)
+  homepageFeatureEnd  DateTime?
+  expiresAt           DateTime?     // null = never expires
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  seller    User           @relation(fields: [sellerId], references: [id])
+  enquiries Enquiry[]
+  boosts    ListingBoost[]
+  analytics ListingView[]
+
+  @@map("listings")
+}
+
+enum ListingCategory {
+  GEM
+  JEWELLERY
+  PRECIOUS_METAL
+  SERVICE
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  PAUSED
+  EXPIRED
+  PENDING_REVIEW
+  REJECTED
+}
+
+// ─── Enquiries ────────────────────────────────────────────────────────────────
+
+model Enquiry {
+  id                 String   @id @default(cuid())
+  listingId          String
+  sellerId           String
+  buyerId            String?
+  buyerName          String
+  buyerPhone         String
+  buyerPhoneVerified Boolean  @default(false)
+  buyerEmail         String?
+  message            String
+  isRead             Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id])
+  seller  User    @relation("SellerEnquiries", fields: [sellerId], references: [id])
+  buyer   User?   @relation("BuyerEnquiries", fields: [buyerId], references: [id])
+
+  @@map("enquiries")
+}
+
+// ─── Listing Boosts ───────────────────────────────────────────────────────────
+
+model ListingBoost {
+  id            String    @id @default(cuid())
+  listingId     String
+  sellerId      String
+  boostType     BoostType
+  startDate     DateTime
+  endDate       DateTime
+  isFreeBoost   Boolean   @default(false)
+  amountPaidUsd Decimal?  @db.Decimal(8, 2)
+  amountPaidLkr Decimal?  @db.Decimal(10, 2)
+  paymentRef    String?
+  createdAt     DateTime  @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id])
+  seller  User    @relation(fields: [sellerId], references: [id])
+
+  @@map("listing_boosts")
+}
+
+enum BoostType {
+  TOP_SEARCH_1D
+  TOP_SEARCH_3D
+  TOP_SEARCH_7D
+  CATEGORY_BANNER
+}
+
+// ─── Verification ─────────────────────────────────────────────────────────────
+
+model VerificationRequest {
+  id                 String             @id @default(cuid())
+  sellerId           String             @unique
+  status             VerificationStatus @default(PENDING)
+  nicOrPassportUrl   String?
+  businessRegUrl     String?
+  gemCertUrl         String?
+  adminNotes         String?
+  amountPaidUsd      Decimal            @db.Decimal(8, 2) @default(0)
+  paymentRef         String?
+  submittedAt        DateTime           @default(now())
+  reviewedAt         DateTime?
+  reviewedBy         String?
+
+  seller User @relation(fields: [sellerId], references: [id])
+
+  @@map("verification_requests")
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ─── Metal Prices ─────────────────────────────────────────────────────────────
+
+model MetalPrice {
+  id              String   @id @default(cuid())
+  metal           Metal
+  priceUsdPerGram Decimal  @db.Decimal(12, 4)
+  priceLkrPerGram Decimal  @db.Decimal(12, 2)
+  changePercent24h Decimal? @db.Decimal(6, 3)
+  source          String?
+  fetchedAt       DateTime @default(now())
+
+  @@map("metal_prices")
+}
+
+enum Metal {
+  GOLD_24K
+  GOLD_22K
+  SILVER
+  PLATINUM
+}
+
+model MetalPriceAlert {
+  id             String    @id @default(cuid())
+  userId         String
+  metal          Metal
+  alertType      AlertType
+  thresholdUsd   Decimal?  @db.Decimal(12, 4)
+  notifyVia      String    @default("push") // push | email
+  fcmToken       String?
+  isActive       Boolean   @default(true)
+  lastTriggeredAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("metal_price_alerts")
+}
+
+enum AlertType {
+  ABOVE
+  BELOW
+  DAILY_DIGEST
+}
+
+// ─── Blog ─────────────────────────────────────────────────────────────────────
+
+model BlogPost {
+  id               String     @id @default(cuid())
+  title            String
+  slug             String     @unique
+  content          String
+  excerpt          String?
+  authorId         String
+  isSponsored      Boolean    @default(false)
+  sponsorSellerId  String?
+  sponsorAmountUsd Decimal?   @db.Decimal(8, 2)
+  featuredImageUrl String?
+  metaTitle        String?
+  metaDescription  String?
+  focusKeyword     String?
+  schemaMarkup     Json?
+  status           PostStatus @default(DRAFT)
+  publishedAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  author  User  @relation("BlogAuthor", fields: [authorId], references: [id])
+  sponsor User? @relation("BlogSponsor", fields: [sponsorSellerId], references: [id])
+
+  @@map("blog_posts")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+model SellerAnalyticsDaily {
+  id                String   @id @default(cuid())
+  sellerId          String
+  date              DateTime @db.Date
+  profileViews      Int      @default(0)
+  listingViews      Int      @default(0)
+  enquiriesReceived Int      @default(0)
+
+  seller User @relation(fields: [sellerId], references: [id])
+
+  @@unique([sellerId, date])
+  @@map("seller_analytics_daily")
+}
+
+model ListingView {
+  id        String   @id @default(cuid())
+  listingId String
+  viewerIp  String?
+  viewedAt  DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id])
+
+  @@map("listing_views")
+}
+
+// ─── Referrals ────────────────────────────────────────────────────────────────
+
+model Referral {
+  id               String         @id @default(cuid())
+  referrerSellerId String
+  referredSellerId String         @unique
+  referralCode     String         @unique
+  status           ReferralStatus @default(PENDING)
+  rewardType       String?        // free_month | free_boost
+  convertedAt      DateTime?
+  rewardedAt       DateTime?
+  createdAt        DateTime       @default(now())
+
+  referrerSeller User @relation("ReferrerSeller", fields: [referrerSellerId], references: [id])
+  referredSeller User @relation("ReferredSeller", fields: [referredSellerId], references: [id])
+
+  @@map("referrals")
+}
+
+enum ReferralStatus {
+  PENDING
+  CONVERTED
+  REWARDED
+}
+
+// ─── Social Share Queue (Pro+ digital marketing) ──────────────────────────────
+
+model SocialShareQueue {
+  id        String          @id @default(cuid())
+  sellerId  String
+  listingId String?
+  platform  String          // instagram | facebook | twitter
+  status    SocialShareStatus @default(PENDING)
+  scheduledAt DateTime?
+  postedAt  DateTime?
+  postUrl   String?
+  errorMsg  String?
+  createdAt DateTime        @default(now())
+
+  seller User @relation(fields: [sellerId], references: [id])
+
+  @@map("social_share_queue")
+}
+
+enum SocialShareStatus {
+  PENDING
+  POSTED
+  FAILED
+  SKIPPED
+}
+
+// ─── WhatsApp Broadcast Opt-ins (Dealer — Phase 4) ───────────────────────────
+
+model WhatsappBroadcastOptIn {
+  id        String   @id @default(cuid())
+  buyerId   String
+  sellerId  String
+  optedInAt DateTime @default(now())
+
+  buyer  User @relation("BuyerOptIns", fields: [buyerId], references: [id])
+  seller User @relation("SellerOptIns", fields: [sellerId], references: [id])
+
+  @@unique([buyerId, sellerId])
+  @@map("whatsapp_broadcast_opt_ins")
+}
+
+// ─── Payment Transactions ─────────────────────────────────────────────────────
+
+model PaymentTransaction {
+  id              String        @id @default(cuid())
+  userId          String
+  type            PaymentType
+  amountUsd       Decimal       @db.Decimal(8, 2)
+  amountLkr       Decimal       @db.Decimal(10, 2)
+  currency        String        @default("LKR")
+  gateway         PaymentGateway
+  gatewayRef      String?       // PayHere order_id or Stripe payment_intent_id
+  status          PaymentStatus @default(PENDING)
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("payment_transactions")
+}
+
+enum PaymentType {
+  SUBSCRIPTION
+  BOOST
+  VERIFICATION_BADGE
+  SPONSORED_POST
+}
+
+enum PaymentGateway {
+  PAYHERE
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}

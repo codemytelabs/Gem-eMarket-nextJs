@@ -1,21 +1,61 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn, getSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { colors } from "@/lib/theme/colors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ email, password, rememberMe });
+    setError("");
+    setLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      const session = await getSession();
+      const role = session?.user?.role;
+      const params = new URLSearchParams(window.location.search);
+      const callbackUrl = params.get("callbackUrl");
+
+      if (callbackUrl) {
+        router.push(callbackUrl);
+      } else if (role === "ADMIN") {
+        router.push("/admin");
+      } else if (role === "SELLER") {
+        router.push("/dashboard");
+      } else {
+        router.push("/");
+      }
+      router.refresh();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -23,30 +63,21 @@ export default function LoginPage() {
       <div className="max-w-md w-full mx-auto space-y-8 bg-white p-8 rounded-lg shadow-lg">
         {/* Logo and Header */}
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 relative">
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `linear-gradient(135deg, ${colors.primary.main}, ${colors.accent.features})`,
-              }}
-            ></div>
-            <div className="absolute inset-1 bg-white rounded-full flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke={colors.primary.main}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center gap-2"
+          >
+            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full">
+              <Image
+                src="/images/blue-sapphire-gemstone-free-png.webp"
+                alt="Lumevelo"
+                fill
+                sizes="48px"
+                className="object-cover"
+              />
             </div>
-          </div>
+            <span className="font-bold text-2xl text-primary">Lumevelo</span>
+          </Link>
           <h2 className="mt-6 text-3xl font-extrabold text-[#34495e]">
             Sign in to your account
           </h2>
@@ -65,6 +96,12 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-4">
             <Input
               label="Email Address"
@@ -140,11 +177,8 @@ export default function LoginPage() {
             type="submit"
             variant="primary"
             fullWidth
+            isLoading={loading}
             leftIcon={<Lock className="h-5 w-5" />}
-            className="bg-blue-600"
-            style={{
-              backgroundColor: colors.primary.main,
-            }}
           >
             Sign in
           </Button>

@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { colors } from "@/lib/theme/colors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
@@ -16,18 +20,62 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // registration logic here
-    console.log({
-      fullName,
-      email,
-      contact,
-      password,
-      confirmPassword,
-      agreeTerms,
-    });
+    setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (!agreeTerms) {
+      setError("You must agree to the Terms of Service and Privacy Policy");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fullName,
+          email,
+          password,
+          phone: contact,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message ?? "Registration failed");
+      }
+
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        router.push("/login");
+        return;
+      }
+
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,30 +83,21 @@ export default function RegisterPage() {
       <div className="max-w-md w-full mx-auto space-y-8 bg-white p-8 rounded-lg shadow-lg">
         {/* Logo and Header */}
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 relative">
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `linear-gradient(135deg, ${colors.primary.main}, ${colors.accent.features})`,
-              }}
-            ></div>
-            <div className="absolute inset-1 bg-white rounded-full flex items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke={colors.primary.main}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center gap-2"
+          >
+            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full">
+              <Image
+                src="/images/blue-sapphire-gemstone-free-png.webp"
+                alt="Lumevelo"
+                fill
+                sizes="48px"
+                className="object-cover"
+              />
             </div>
-          </div>
+            <span className="font-bold text-2xl text-primary">Lumevelo</span>
+          </Link>
           <h2 className="mt-6 text-3xl font-extrabold text-[#34495e]">
             Create your account
           </h2>
@@ -77,6 +116,12 @@ export default function RegisterPage() {
 
         {/* Registration Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-4">
             <Input
               label="Full Name"
@@ -215,11 +260,8 @@ export default function RegisterPage() {
             type="submit"
             variant="primary"
             fullWidth
+            isLoading={loading}
             leftIcon={<UserPlus className="h-5 w-5" />}
-            className="bg-blue-600"
-            style={{
-              backgroundColor: colors.primary.main,
-            }}
           >
             Create Account
           </Button>
