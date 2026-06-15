@@ -137,14 +137,6 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/help-center/delivery"
-                  className="text-light-text hover:text-text"
-                >
-                  Shipping & Delivery
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/help-center/complaints"
                   className="text-light-text hover:text-text"
                 >

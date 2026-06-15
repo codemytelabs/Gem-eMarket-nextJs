@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { useThemeStore } from "@/store/themeStore";
 
 export default function About() {
@@ -14,19 +15,23 @@ export default function About() {
         <h1
           className={`text-4xl font-bold mb-6 ${isDarkMode ? "text-white" : ""}`}
         >
-          About PetPals
+          About Lumevelo
         </h1>
         <p
           className={`text-xl mb-8 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
         >
-          Your trusted pet marketplace, connecting pet lovers with top breeders,
-          sellers, and essential pet products. From dogs and cats to exotic
-          birds and fish, find everything in one place.
+          Lumevelo is a global online marketplace for certified gems, precious
+          metals, and fine jewellery, connecting buyers with verified sellers
+          worldwide, anytime.
         </p>
-        <div
-          className={`w-full h-64 rounded-lg mb-8 flex items-center justify-center ${isDarkMode ? "bg-gray-700" : "bg-gray-100"}`}
-        >
-          <span className="text-gray-400">Featured pet marketplace image</span>
+        <div className="relative w-full h-64 rounded-lg mb-8 overflow-hidden">
+          <Image
+            src="/images/blue-sapphire-gemstone-free-png.webp"
+            alt="Certified gemstones on Lumevelo"
+            fill
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="object-cover"
+          />
         </div>
       </section>
 
@@ -40,23 +45,22 @@ export default function About() {
           className={`p-6 rounded-lg ${isDarkMode ? "bg-gray-700" : "bg-white"} shadow-md`}
         >
           <p className="mb-4">
-            Founded in 2020 by a group of passionate pet enthusiasts, PetPals
-            began with a simple mission: to create a safe, reliable platform
-            where pet lovers could find their perfect companion and everything
-            needed for their care.
+            Lumevelo was founded to bring the centuries-old trade in gems,
+            precious metals, and fine jewellery online, making it easier for
+            buyers and sellers to connect, trade, and build trust in a single
+            marketplace.
           </p>
           <p className="mb-4">
-            What started as a small online community has now grown into one of
-            the most trusted pet marketplaces, connecting thousands of
-            responsible breeders and sellers with loving homes across the
-            country.
+            What started as an idea to digitise the local gem trade has grown
+            into a marketplace that brings together verified gem dealers,
+            jewellers, and precious metal traders with buyers and collectors
+            from around the world.
           </p>
           <p>
-            Our team consists of veterinarians, animal behaviorists, and
-            lifelong pet owners who understand the special bond between humans
-            and animals. This expertise drives everything we do, from our
-            rigorous breeder verification process to our carefully curated
-            selection of pet products.
+            Our team combines expertise in gemology, jewellery craftsmanship,
+            and online marketplaces, and that knowledge shapes everything we do,
+            from our seller verification process to the resources we provide to
+            help buyers shop with confidence.
           </p>
         </div>
       </section>
@@ -95,8 +99,8 @@ export default function About() {
               Connect
             </h3>
             <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-              Bringing together pet lovers with ethical breeders and quality
-              sellers in a transparent marketplace.
+              Bringing together buyers and verified sellers of gems, precious
+              metals, and jewellery in a transparent marketplace.
             </p>
           </div>
 
@@ -124,11 +128,11 @@ export default function About() {
             <h3
               className={`text-lg font-medium mb-2 ${isDarkMode ? "text-white" : ""}`}
             >
-              Protect
+              Verify
             </h3>
             <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-              Ensuring animal welfare through strict seller guidelines and
-              responsible breeding practices.
+              Building trust through seller verification and encouraging
+              certified, authenticated listings.
             </p>
           </div>
 
@@ -159,8 +163,8 @@ export default function About() {
               Educate
             </h3>
             <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-              Providing resources for proper pet care and helping new owners
-              make informed decisions.
+              Providing guides on gemstones, precious metals, and jewellery care
+              to help buyers and sellers make informed decisions.
             </p>
           </div>
         </div>
@@ -193,14 +197,14 @@ export default function About() {
               </svg>
               <div>
                 <h3 className={`font-medium ${isDarkMode ? "text-white" : ""}`}>
-                  Verified Breeders & Sellers
+                  Verified Sellers
                 </h3>
                 <p
                   className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
                 >
-                  All breeders and sellers undergo a thorough verification
-                  process to ensure they meet our strict standards for animal
-                  welfare and ethical practices.
+                  Gem dealers, jewellers, and precious metal traders go through
+                  a verification process before they can list on Lumevelo, so
+                  buyers know who they&apos;re dealing with.
                 </p>
               </div>
             </li>
@@ -222,14 +226,14 @@ export default function About() {
               </svg>
               <div>
                 <h3 className={`font-medium ${isDarkMode ? "text-white" : ""}`}>
-                  Wide Selection of Pets
+                  Wide Selection
                 </h3>
                 <p
                   className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
                 >
-                  From common companions like dogs and cats to exotic reptiles,
-                  birds, and aquatic creatures, find the perfect pet for your
-                  lifestyle.
+                  From rare gemstones and precious metals to handcrafted
+                  jewellery and related services such as certification,
+                  valuation, and repair.
                 </p>
               </div>
             </li>
@@ -251,13 +255,13 @@ export default function About() {
               </svg>
               <div>
                 <h3 className={`font-medium ${isDarkMode ? "text-white" : ""}`}>
-                  Premium Pet Products
+                  Certified & Authenticated Listings
                 </h3>
                 <p
                   className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
                 >
-                  Curated selection of high-quality food, toys, accessories, and
-                  healthcare items from trusted brands and innovative startups.
+                  Many sellers provide certification or grading reports from
+                  recognised gemological laboratories alongside their listings.
                 </p>
               </div>
             </li>
@@ -279,43 +283,19 @@ export default function About() {
               </svg>
               <div>
                 <h3 className={`font-medium ${isDarkMode ? "text-white" : ""}`}>
-                  Expert Advice & Resources
+                  Expert Resources & Guidance
                 </h3>
                 <p
                   className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
                 >
-                  Access to veterinarian-approved guides on pet care, training,
-                  nutrition, and health, helping you give your pets the best
-                  life possible.
+                  Guides on gemstones, precious metals, and jewellery to help
+                  you understand quality, value, and care.
                 </p>
               </div>
             </li>
           </ul>
         </div>
       </section>
-
-      {/* <section className="mb-12">
-          <h2 className={`text-2xl font-semibold mb-4 ${isDarkMode ? 'text-white' : ''}`}>Our Team</h2>
-          <div className="grid md:grid-cols-4 gap-6">
-            {[
-              { name: "Emma Wilson", role: "Founder & CEO", background: "Veterinarian with 15+ years experience" },
-              { name: "Marcus Chen", role: "Head of Operations", background: "Former animal shelter director" },
-              { name: "Sophia Rodriguez", role: "Chief Animal Welfare Officer", background: "Animal behaviorist" },
-              { name: "James Taylor", role: "Product Director", background: "Pet industry veteran" }
-            ].map((member, index) => (
-              <div key={index} className={`p-4 rounded-lg text-center ${isDarkMode ? 'bg-gray-700' : 'bg-white'} shadow-md`}>
-                <div className={`h-24 w-24 mx-auto mb-3 rounded-full ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} flex items-center justify-center`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className={`h-12 w-12 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <h3 className={`font-medium ${isDarkMode ? 'text-white' : ''}`}>{member.name}</h3>
-                <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{member.role}</p>
-                <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{member.background}</p>
-              </div>
-            ))}
-          </div>
-        </section> */}
 
       <section>
         <h2
@@ -329,9 +309,9 @@ export default function About() {
           <p
             className={`mb-6 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
           >
-            Whether you&apos;re looking for a new pet, selling responsibly bred
-            animals, or simply seeking advice from fellow pet lovers, we invite
-            you to become part of our growing community.
+            Whether you&apos;re looking to buy certified gems and jewellery,
+            list your own items as a verified seller, or simply learn more about
+            the trade, we invite you to become part of our growing community.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
@@ -339,6 +319,12 @@ export default function About() {
               className={`px-6 py-2 rounded-md ${isDarkMode ? "bg-blue-600 hover:bg-blue-500" : "bg-blue-500 hover:bg-blue-600"} text-white transition-colors`}
             >
               Join Today
+            </a>
+            <a
+              href="/sell"
+              className={`px-6 py-2 rounded-md ${isDarkMode ? "bg-gray-600 hover:bg-gray-500" : "bg-gray-200 hover:bg-gray-300"} ${isDarkMode ? "text-white" : "text-gray-800"} transition-colors`}
+            >
+              Become a Seller
             </a>
             <a
               href="/help-center/contact"

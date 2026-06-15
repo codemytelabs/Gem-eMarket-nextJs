@@ -61,16 +61,16 @@ export default function ComplaintsPage() {
 
           <div>
             <label
-              htmlFor="order-number"
+              htmlFor="listing-id"
               className={`block mb-1 font-medium ${isDarkMode ? "text-gray-200" : ""}`}
             >
-              Order Number (if applicable)
+              Listing ID or Seller Name (if applicable)
             </label>
             <input
               type="text"
-              id="order-number"
+              id="listing-id"
               className={`w-full px-4 py-2 border rounded-md ${isDarkMode ? "bg-gray-800 border-gray-600 text-white" : "border-gray-300"}`}
-              placeholder="e.g., ORD-12345"
+              placeholder="e.g., Listing #1234 or seller's name"
             />
           </div>
 
@@ -85,11 +85,11 @@ export default function ComplaintsPage() {
               id="complaint-type"
               className={`w-full px-4 py-2 border rounded-md ${isDarkMode ? "bg-gray-800 border-gray-600 text-white" : "border-gray-300"}`}
             >
-              <option>Product Quality</option>
-              <option>Shipping & Delivery</option>
-              <option>Customer Service</option>
+              <option>Listing Accuracy / Item Description</option>
+              <option>Seller Conduct or Dispute</option>
+              <option>Authenticity or Certification Concern</option>
+              <option>Billing & Subscription Payment</option>
               <option>Website Issues</option>
-              <option>Billing & Payment</option>
               <option>Other</option>
             </select>
           </div>

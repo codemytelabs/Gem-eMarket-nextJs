@@ -14,29 +14,45 @@ export default function FaqPage() {
 
   const faqItems: FaqItem[] = [
     {
-      question: "How do I track my order?",
+      question: "What is Lumevelo?",
       answer:
-        "You can track your order by visiting the 'My Orders' section in your account dashboard. Click on the specific order and you'll find a tracking number and link that will direct you to our shipping partner's website for real-time updates.",
+        "Lumevelo is a global online marketplace for certified gems, precious metals, and fine jewellery. We connect buyers with verified sellers worldwide so you can browse, list, and trade with confidence.",
     },
     {
-      question: "What is your return policy?",
+      question: "How do I contact a seller about a listing?",
       answer:
-        "We accept returns within 30 days of purchase. Items must be in original condition with tags attached. Please fill out the return form included with your package or visit the 'Returns' section on our website to initiate the process.",
+        "Open the listing you're interested in and use the enquiry form or contact details provided on the page to message the seller directly. Our support team is also available if you need help reaching a seller.",
     },
     {
-      question: "How long does shipping take?",
+      question: "How are sellers verified on Lumevelo?",
       answer:
-        "Standard shipping typically takes 3-5 business days within the continental US. Express shipping options (1-2 business days) are available at checkout for an additional fee. International shipping times vary by location.",
+        "Sellers go through a verification process before they can list items, which includes confirming their identity and business details. Verified sellers display a verification badge on their profile and listings.",
     },
     {
-      question: "Do you offer international shipping?",
+      question: "Are gemstones and jewellery on the platform certified?",
       answer:
-        "Yes, we ship to most countries worldwide. International shipping costs and delivery times vary based on location. These details will be calculated and displayed during checkout before you complete your purchase.",
+        "Many sellers provide certification or grading reports from recognised gemological laboratories along with their listings. Always check the listing details for certification information and ask the seller directly if you have questions about authenticity.",
     },
     {
-      question: "How can I change or cancel my order?",
+      question: "How do I list an item for sale?",
       answer:
-        "You can modify or cancel your order within 1 hour of placing it by contacting our customer service team. After this window, orders enter our fulfillment process and cannot be modified, but you can return the items once received.",
+        "Create a seller account, then use the 'Sell' page to submit details about your gem, jewellery, or precious metal item, including photos, description, and pricing. Once submitted, your listing will be reviewed before it goes live.",
+    },
+    {
+      question: "Does Lumevelo handle delivery or shipping of items?",
+      answer:
+        "No. Lumevelo is a marketplace that connects buyers and sellers — we do not handle delivery, shipping, or courier services ourselves. Buyers and sellers arrange collection or delivery directly with each other once a deal is agreed.",
+    },
+    {
+      question: "How do payments and subscriptions work?",
+      answer:
+        "Seller subscription plans and platform fees are processed securely through Stripe and PayHere. Payments for individual items are arranged directly between buyers and sellers, and we recommend agreeing on terms in writing before completing any transaction.",
+    },
+    {
+      question:
+        "What should I do if I have a problem with a seller or listing?",
+      answer:
+        "If you experience an issue with a seller, a listing, or suspect fraudulent activity, please use the Complaints page to report the issue. Our team will review the report and follow up with you.",
     },
   ];
 

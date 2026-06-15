@@ -70,9 +70,9 @@ export default function ContactPage() {
               className={`w-full px-4 py-2 border rounded-md ${isDarkMode ? "bg-gray-800 border-gray-600 text-white" : "border-gray-300"}`}
             >
               <option>General Inquiry</option>
-              <option>Order Issue</option>
-              <option>Product Question</option>
-              <option>Billing Issue</option>
+              <option>Seller or Listing Question</option>
+              <option>Account Issue</option>
+              <option>Billing & Subscription</option>
               <option>Other</option>
             </select>
           </div>
@@ -115,10 +115,10 @@ export default function ContactPage() {
             <h3
               className={`font-medium mb-1 ${isDarkMode ? "text-gray-200" : ""}`}
             >
-              Customer Service Phone
+              Support Hotline
             </h3>
             <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-              1-800-123-4567 (Mon-Fri, 9am-5pm EST)
+              +94 11 234 5678 (Mon-Fri, 9am-5pm SLST)
             </p>
           </div>
 
@@ -129,7 +129,7 @@ export default function ContactPage() {
               Email
             </h3>
             <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-              support@example.com
+              support@lumevelo.com
             </p>
           </div>
 
@@ -137,14 +137,12 @@ export default function ContactPage() {
             <h3
               className={`font-medium mb-1 ${isDarkMode ? "text-gray-200" : ""}`}
             >
-              Mailing Address
+              Office Address
             </h3>
             <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-              123 Support Street
+              Lumevelo HQ
               <br />
-              Customer City, CS 12345
-              <br />
-              United States
+              Colombo, Sri Lanka
             </p>
           </div>
         </div>

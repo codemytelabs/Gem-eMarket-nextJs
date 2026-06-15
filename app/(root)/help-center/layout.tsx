@@ -15,7 +15,6 @@ export default function CustomerServiceLayout({
     { href: "/help-center/contact", label: "Contact Us" },
     { href: "/help-center/faq", label: "FAQ" },
     { href: "/help-center/complaints", label: "Complaints" },
-    { href: "/help-center/delivery", label: "Delivery" },
     { href: "/help-center/privacy-policy", label: "Privacy Policy" },
   ];
 

@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
         <p
           className={`mb-6 italic ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
         >
-          Last Updated: April 10, 2025
+          Last Updated: June 15, 2026
         </p>
 
         <div className="space-y-8">
@@ -33,11 +33,12 @@ export default function PrivacyPolicyPage() {
             <p
               className={`mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
             >
-              This Privacy Policy explains how we collect, use, disclose, and
-              safeguard your information when you visit our website or use our
-              services. Please read this privacy policy carefully. If you do not
-              agree with the terms of this privacy policy, please do not access
-              the site.
+              This Privacy Policy explains how Lumevelo collects, uses,
+              discloses, and safeguards your information when you visit our
+              marketplace or use our services to buy, sell, or browse gems,
+              precious metals, and jewellery. Please read this privacy policy
+              carefully. If you do not agree with the terms of this privacy
+              policy, please do not access the site.
             </p>
             <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
               We reserve the right to make changes to this Privacy Policy at any
@@ -63,11 +64,12 @@ export default function PrivacyPolicyPage() {
             <p
               className={`mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
             >
-              Personally identifiable information, such as your name, shipping
-              address, email address, and telephone number, that you voluntarily
-              give to us when you register with the Site or when you choose to
-              participate in various activities related to the Site, such as
-              online shopping and chat.
+              Personally identifiable information, such as your name, billing or
+              business address, email address, and telephone number, that you
+              voluntarily give to us when you register with the Site or when you
+              choose to participate in various activities related to the Site,
+              such as creating listings, contacting sellers, or subscribing to a
+              seller plan.
             </p>
 
             <h3
@@ -92,10 +94,10 @@ export default function PrivacyPolicyPage() {
             <p
               className={`mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
             >
-              Financial information, such as data related to your payment method
-              (e.g., valid credit card number, card brand, expiration date) that
-              we may collect when you purchase, order, return, exchange, or
-              request information about our services from the Site.
+              Financial information, such as data related to your payment
+              method, that we may collect when you subscribe to a seller plan or
+              pay platform fees through our payment processors, Stripe and
+              PayHere. We do not store full card numbers on our servers.
             </p>
 
             <h3
@@ -104,10 +106,10 @@ export default function PrivacyPolicyPage() {
               Mobile Device Data
             </h3>
             <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-              Financial information, such as data related to your payment method
-              (e.g., valid credit card number, card brand, expiration date) that
-              we may collect when you purchase, order, return, exchange, or
-              request information about our services from the Site.
+              Device information such as your mobile device ID, model, and
+              manufacturer, and information about the device&apos;s operating
+              system, that we may collect automatically when you access the Site
+              from a mobile device.
             </p>
           </section>
         </div>
