@@ -1,24 +1,25 @@
 // /app/admin/layout.tsx
 "use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Users, 
-  ShoppingBag, 
-  Settings, 
-  BarChart3, 
-  FileText, 
-  LogOut, 
-  ChevronLeft, 
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  ShoppingBag,
+  Settings,
+  BarChart3,
+  FileText,
+  LogOut,
+  ChevronLeft,
   Menu,
   Bell,
   User,
-  PawPrint
-} from 'lucide-react';
-import { colors } from '@/lib/theme/colors';
+  PawPrint,
+  Percent,
+} from "lucide-react";
+import { colors } from "@/lib/theme/colors";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -29,55 +30,72 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
 
   const navItems = [
-    { 
-      label: 'Dashboard', 
-      href: '/admin', 
-      icon: <LayoutDashboard className="w-5 h-5" /> 
+    {
+      label: "Dashboard",
+      href: "/admin",
+      icon: <LayoutDashboard className="w-5 h-5" />,
     },
-    { 
-      label: 'Users', 
-      href: '/admin/users', 
-      icon: <Users className="w-5 h-5" /> 
+    {
+      label: "Users",
+      href: "/admin/users",
+      icon: <Users className="w-5 h-5" />,
     },
-    { 
-      label: 'Products', 
-      href: '/admin/products', 
-      icon: <ShoppingBag className="w-5 h-5" /> 
+    {
+      label: "Products",
+      href: "/admin/products",
+      icon: <ShoppingBag className="w-5 h-5" />,
     },
-    { 
-      label: 'Analytics', 
-      href: '/admin/analytics', 
-      icon: <BarChart3 className="w-5 h-5" /> 
+    {
+      label: "Analytics",
+      href: "/admin/analytics",
+      icon: <BarChart3 className="w-5 h-5" />,
     },
-    { 
-      label: 'Reports', 
-      href: '/admin/reports', 
-      icon: <FileText className="w-5 h-5" /> 
+    {
+      label: "Coupons",
+      href: "/admin/coupons",
+      icon: <Percent className="w-5 h-5" />,
     },
-    { 
-      label: 'Settings', 
-      href: '/admin/settings', 
-      icon: <Settings className="w-5 h-5" /> 
+    {
+      label: "Reports",
+      href: "/admin/reports",
+      icon: <FileText className="w-5 h-5" />,
+    },
+    {
+      label: "Settings",
+      href: "/admin/settings",
+      icon: <Settings className="w-5 h-5" />,
     },
   ];
 
   return (
     <div className="flex h-screen bg-neutral-background">
       {/* Sidebar */}
-      <div className={`${
-        collapsed ? 'w-16' : 'w-64'
-      } bg-white shadow-md transition-all duration-300 flex flex-col`}>
+      <div
+        className={`${
+          collapsed ? "w-16" : "w-64"
+        } bg-white shadow-md transition-all duration-300 flex flex-col`}
+      >
         {/* Logo and Collapse Button */}
         <div className="flex items-center justify-between h-16 px-4 border-b">
           {!collapsed && (
             <Link href="/admin" className="flex items-center">
-              <div className="h-8 w-8 rounded-full flex items-center justify-center mr-2" style={{ background: `linear-gradient(135deg, ${colors.primary.main}, ${colors.accent.features})` }}>
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center mr-2"
+                style={{
+                  background: `linear-gradient(135deg, ${colors.primary.main}, ${colors.accent.features})`,
+                }}
+              >
                 <PawPrint className="h-5 w-5 text-white" />
               </div>
-              <span className="font-semibold text-lg" style={{ color: colors.primary.main }}>PetPalace</span>
+              <span
+                className="font-semibold text-lg"
+                style={{ color: colors.primary.main }}
+              >
+                PetPalace
+              </span>
             </Link>
           )}
-          <button 
+          <button
             onClick={() => setCollapsed(!collapsed)}
             className="p-2 rounded-md hover:bg-neutral-background"
             style={{ color: colors.neutral.lightText }}
@@ -101,8 +119,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     href={item.href}
                     className={`flex items-center px-3 py-2 rounded-md transition-colors`}
                     style={{
-                      backgroundColor: isActive ? `${colors.primary.light}20` : 'transparent',
-                      color: isActive ? colors.primary.main : colors.neutral.text
+                      backgroundColor: isActive
+                        ? `${colors.primary.light}20`
+                        : "transparent",
+                      color: isActive
+                        ? colors.primary.main
+                        : colors.neutral.text,
                     }}
                   >
                     <span className="mr-3">{item.icon}</span>
@@ -115,29 +137,55 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
 
         {/* User Profile and Logout */}
-        <div className={`p-3 border-t ${collapsed ? 'items-center' : ''}`}>
+        <div className={`p-3 border-t ${collapsed ? "items-center" : ""}`}>
           {collapsed ? (
             <div className="flex flex-col items-center space-y-2">
-              <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${colors.secondary.light}30` }}>
-                <User className="h-4 w-4" style={{ color: colors.secondary.dark }} />
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${colors.secondary.light}30` }}
+              >
+                <User
+                  className="h-4 w-4"
+                  style={{ color: colors.secondary.dark }}
+                />
               </div>
-              <Link href="/admin/logout" className="p-2 rounded-md" style={{ color: colors.accent.premium }}>
+              <Link
+                href="/admin/logout"
+                className="p-2 rounded-md"
+                style={{ color: colors.accent.premium }}
+              >
                 <LogOut className="h-5 w-5" />
               </Link>
             </div>
           ) : (
             <div className="flex flex-col space-y-3">
               <div className="flex items-center">
-                <div className="h-8 w-8 rounded-full flex items-center justify-center mr-2" style={{ backgroundColor: `${colors.secondary.light}30` }}>
-                  <User className="h-4 w-4" style={{ color: colors.secondary.dark }} />
+                <div
+                  className="h-8 w-8 rounded-full flex items-center justify-center mr-2"
+                  style={{ backgroundColor: `${colors.secondary.light}30` }}
+                >
+                  <User
+                    className="h-4 w-4"
+                    style={{ color: colors.secondary.dark }}
+                  />
                 </div>
                 <div>
-                  <p className="text-sm font-medium"  style={{ color: colors.neutral.text }}>Admin User</p>
-                  <p className="text-xs" style={{ color: colors.neutral.lightText }}>admin@petpalace.com</p>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: colors.neutral.text }}
+                  >
+                    Admin User
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{ color: colors.neutral.lightText }}
+                  >
+                    admin@petpalace.com
+                  </p>
                 </div>
               </div>
-              <Link 
-                href="/admin/logout" 
+              <Link
+                href="/admin/logout"
                 className="flex items-center px-3 py-2 rounded-md hover:bg-red-50"
                 style={{ color: colors.accent.premium }}
               >
@@ -153,21 +201,35 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
-          <h1 className="text-xl font-semibold" style={{ color: colors.neutral.text }}>Admin Dashboard</h1>
+          <h1
+            className="text-xl font-semibold"
+            style={{ color: colors.neutral.text }}
+          >
+            Admin Dashboard
+          </h1>
           <div className="flex items-center space-x-4">
             <button className="relative p-2 rounded-full hover:bg-neutral-background">
-              <Bell className="h-5 w-5" style={{ color: colors.neutral.lightText }} />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full" style={{ backgroundColor: colors.accent.premium }}></span>
+              <Bell
+                className="h-5 w-5"
+                style={{ color: colors.neutral.lightText }}
+              />
+              <span
+                className="absolute top-1 right-1 h-2 w-2 rounded-full"
+                style={{ backgroundColor: colors.accent.premium }}
+              ></span>
             </button>
-            <div 
+            <div
               className="h-8 w-8 rounded-full flex items-center justify-center"
               style={{ backgroundColor: `${colors.primary.light}20` }}
             >
-              <User className="h-4 w-4" style={{ color: colors.primary.main }} />
+              <User
+                className="h-4 w-4"
+                style={{ color: colors.primary.main }}
+              />
             </div>
           </div>
         </header>
-        
+
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6 bg-neutral-background">
           {children}

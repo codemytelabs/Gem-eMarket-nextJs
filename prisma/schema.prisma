@@ -69,6 +69,8 @@ model SubscriptionPlan {
   displayName            String
   priceUsd               Decimal  @db.Decimal(8, 2)
   priceLkr               Decimal  @db.Decimal(10, 2)
+  priceUsdAnnual         Decimal? @db.Decimal(8, 2) // null = fall back to priceUsd * 12
+  priceLkrAnnual         Decimal? @db.Decimal(10, 2) // null = fall back to priceLkr * 12
   maxListings            Int?     // null = unlimited
   maxReelsPerMonth       Int?     // null = unlimited
   hasShopProfile         Boolean  @default(false)
@@ -135,6 +137,7 @@ model CouponCode {
   discountType       DiscountType
   discountValue      Decimal      @db.Decimal(8, 2) // % (0-100), USD amount, or months
   applicablePlanIds  String[]     // empty = all plans
+  billingCycle       BillingCycle? // null = applies to monthly and annual billing
   maxUses            Int?         // null = unlimited
   usesCount          Int          @default(0)
   maxUsesPerUser     Int          @default(1)
@@ -153,6 +156,11 @@ enum DiscountType {
   PERCENTAGE
   FIXED_USD
   FREE_MONTHS
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
 }
 
 model CouponRedemption {
