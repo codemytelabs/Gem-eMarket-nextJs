@@ -1,20 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, UserPlus } from "lucide-react";
+import { Eye, EyeOff, UserPlus, ChevronDown } from "lucide-react";
 import { colors } from "@/lib/theme/colors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { COUNTRIES, getDialCode } from "@/lib/utils/countries";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [contact, setContact] = useState("");
+  const [country, setCountry] = useState("LK");
+  const [locationCity, setLocationCity] = useState("");
+  const [dialCode, setDialCode] = useState("+94");
+  const [phoneLocal, setPhoneLocal] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,6 +26,20 @@ export default function RegisterPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Update dial code when country changes
+  useEffect(() => {
+    const code = getDialCode(country);
+    if (code) setDialCode(code);
+  }, [country]);
+
+  const handleCountryChange = (code: string) => {
+    setCountry(code);
+    // Clear local phone when switching country
+    setPhoneLocal("");
+  };
+
+  const fullPhone = phoneLocal ? `${dialCode} ${phoneLocal}` : undefined;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,14 +63,14 @@ export default function RegisterPage() {
           name: fullName,
           email,
           password,
-          phone: contact,
+          phone: fullPhone,
+          country,
+          locationCity: locationCity || undefined,
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message ?? "Registration failed");
-      }
+      if (!res.ok) throw new Error(data.message ?? "Registration failed");
 
       const result = await signIn("credentials", {
         email,
@@ -81,7 +99,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex bg-[#f5f5f5] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full mx-auto space-y-8 bg-white p-8 rounded-lg shadow-lg">
-        {/* Logo and Header */}
+        {/* Logo & Header */}
         <div className="text-center">
           <Link
             href="/"
@@ -102,8 +120,7 @@ export default function RegisterPage() {
             Create your account
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Or
-            <br />
+            Or{" "}
             <Link
               href="/login"
               className="font-normal"
@@ -114,114 +131,173 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Registration Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
               {error}
             </div>
           )}
 
-          <div className="space-y-4">
-            <Input
-              label="Full Name"
-              id="full-name"
-              name="fullName"
+          {/* Full Name */}
+          <Input
+            label="Full Name"
+            id="full-name"
+            name="fullName"
+            type="text"
+            autoComplete="name"
+            required
+            placeholder="Enter your full name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            fullWidth
+          />
+
+          {/* Email */}
+          <Input
+            label="Email Address"
+            id="email-address"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="Enter your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            fullWidth
+          />
+
+          {/* Country */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Country
+            </label>
+            <div className="relative">
+              <select
+                value={country}
+                onChange={(e) => handleCountryChange(e.target.value)}
+                className="w-full appearance-none border border-gray-300 rounded-lg px-3 py-2.5 pr-10 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.name} ({c.dialCode})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* City / Location */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              City / Region{" "}
+              <span className="text-xs text-gray-400 font-normal">
+                optional
+              </span>
+            </label>
+            <input
               type="text"
-              autoComplete="name"
-              required
-              placeholder="Enter your full name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              fullWidth
-            />
-
-            <Input
-              label="Email Address"
-              id="email-address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="Enter your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              fullWidth
-            />
-
-            <Input
-              label="Contact"
-              id="contact"
-              name="contact"
-              type="tel"
-              autoComplete="contact"
-              required
-              placeholder="Enter your contact number"
-              value={contact}
-              onChange={(e) => setContact(e.target.value)}
-              fullWidth
-            />
-
-            <Input
-              label="Password"
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              required
-              placeholder="Create a password"
-              helperText="Password must be at least 8 characters with a number and special character"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              fullWidth
-              rightIcon={
-                showPassword ? (
-                  <Eye
-                    className="h-5 w-5 text-gray-400 cursor-pointer"
-                    onClick={() => setShowPassword(false)}
-                  />
-                ) : (
-                  <EyeOff
-                    className="h-5 w-5 text-gray-400 cursor-pointer"
-                    onClick={() => setShowPassword(true)}
-                  />
-                )
+              value={locationCity}
+              onChange={(e) => setLocationCity(e.target.value)}
+              placeholder={
+                country === "LK"
+                  ? "e.g. Ratnapura, Colombo, Kandy"
+                  : country === "IN"
+                    ? "e.g. Mumbai, Jaipur"
+                    : "e.g. your city or region"
               }
-            />
-
-            <Input
-              label="Confirm Password"
-              id="confirm-password"
-              name="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              autoComplete="new-password"
-              required
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              error={confirmPassword ? password !== confirmPassword : undefined}
-              errorText="Passwords do not match"
-              fullWidth
-              rightIcon={
-                showConfirmPassword ? (
-                  <Eye
-                    className="h-5 w-5 text-gray-400 cursor-pointer"
-                    onClick={() => {
-                      setShowConfirmPassword(false);
-                    }}
-                  />
-                ) : (
-                  <EyeOff
-                    className="h-5 w-5 text-gray-400 cursor-pointer"
-                    onClick={() => {
-                      setShowConfirmPassword(true);
-                    }}
-                  />
-                )
-              }
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
+          {/* Phone with dial code */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Phone Number{" "}
+              <span className="text-xs text-gray-400 font-normal">
+                optional
+              </span>
+            </label>
+            <div className="flex gap-2">
+              {/* Dial code badge — clicking it opens the country select above */}
+              <div className="flex items-center px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 whitespace-nowrap select-none">
+                {dialCode}
+              </div>
+              <input
+                type="tel"
+                value={phoneLocal}
+                onChange={(e) =>
+                  setPhoneLocal(e.target.value.replace(/[^0-9\s\-()]/g, ""))
+                }
+                placeholder="77 123 4567"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {phoneLocal && (
+              <p className="mt-1 text-xs text-gray-400">
+                Will be saved as: {dialCode} {phoneLocal}
+              </p>
+            )}
+          </div>
+
+          {/* Password */}
+          <Input
+            label="Password"
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            required
+            placeholder="Create a password"
+            helperText="Minimum 8 characters"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            fullWidth
+            rightIcon={
+              showPassword ? (
+                <Eye
+                  className="h-5 w-5 text-gray-400 cursor-pointer"
+                  onClick={() => setShowPassword(false)}
+                />
+              ) : (
+                <EyeOff
+                  className="h-5 w-5 text-gray-400 cursor-pointer"
+                  onClick={() => setShowPassword(true)}
+                />
+              )
+            }
+          />
+
+          {/* Confirm Password */}
+          <Input
+            label="Confirm Password"
+            id="confirm-password"
+            name="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            autoComplete="new-password"
+            required
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            error={confirmPassword ? password !== confirmPassword : undefined}
+            errorText="Passwords do not match"
+            fullWidth
+            rightIcon={
+              showConfirmPassword ? (
+                <Eye
+                  className="h-5 w-5 text-gray-400 cursor-pointer"
+                  onClick={() => setShowConfirmPassword(false)}
+                />
+              ) : (
+                <EyeOff
+                  className="h-5 w-5 text-gray-400 cursor-pointer"
+                  onClick={() => setShowConfirmPassword(true)}
+                />
+              )
+            }
+          />
+
+          {/* Terms */}
           <div className="flex items-center">
             <input
               id="agree-terms"
@@ -270,14 +346,14 @@ export default function RegisterPage() {
         {/* Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+            <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
             <span className="px-2 bg-white text-gray-500">Or sign up with</span>
           </div>
         </div>
 
-        {/* Social Registration Buttons */}
+        {/* Social Buttons */}
         <div className="flex flex-col space-y-3">
           <Button
             variant="outline"

@@ -133,7 +133,7 @@ export const categories = [
         href: "/sellers?type=jewellers",
       },
       { id: "premium", name: "Premium Sellers", href: "/sellers?type=premium" },
-      { id: "new", name: "Become a Seller", href: "/sell" },
+      { id: "new", name: "Become a Seller", href: "/seller-registration" },
     ],
   },
 ];

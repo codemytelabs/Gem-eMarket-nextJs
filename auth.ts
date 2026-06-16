@@ -46,6 +46,44 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user, trigger }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.isVerified = user.isVerified;
+        token.shopSlug = user.shopSlug;
+        token.planName = user.planName;
+      }
+      // Re-read from DB whenever the client calls session.update()
+      if (trigger === "update") {
+        const fresh = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: {
+            role: true,
+            shopSlug: true,
+            isVerified: true,
+            subscription: { include: { plan: true } },
+          },
+        });
+        if (fresh) {
+          token.role = fresh.role;
+          token.shopSlug = fresh.shopSlug;
+          token.isVerified = fresh.isVerified;
+          token.planName = fresh.subscription?.plan.name ?? "free";
+        }
+      }
+      return token;
+    },
+    session({ session, token }) {
+      session.user.id = token.id as string;
+      session.user.role = token.role as string;
+      session.user.isVerified = token.isVerified as boolean;
+      session.user.shopSlug = token.shopSlug as string | null;
+      session.user.planName = token.planName as string;
+      return session;
+    },
+  },
 });
 
 declare module "next-auth" {

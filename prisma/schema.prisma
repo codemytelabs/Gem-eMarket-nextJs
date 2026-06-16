@@ -21,12 +21,14 @@ model User {
   isVerified          Boolean   @default(false)
   verifiedAt          DateTime?
   avatarUrl           String?
+  // Location
+  country             String?   // ISO 3166-1 alpha-2 code, e.g. "LK"
+  locationCity        String?   // free-text city / region
   // Seller-specific fields
   shopSlug            String?   @unique
   shopBio             String?
   shopBannerUrl       String?
   whatsappNumber      String?
-  locationCity        String?
   specialties         String[]
   // Social / SEO (Dealer plan)
   shopMetaTitle       String?
@@ -200,6 +202,27 @@ model Listing {
   metalType           String?
   metalPurity         String?
   weightGrams         Decimal?      @db.Decimal(8, 3)
+  weightSovereigns    Decimal?      @db.Decimal(8, 4) // 1 sovereign ≈ 7.9881 g (gold)
+  currentLocation     String?       // SRI_LANKA_CITY value — where the item physically is
+  certificationImages String[]      @default([]) // certificate / hallmark photos
+  // Gem dimensions (mm)
+  dimensionL          Decimal?      @db.Decimal(6, 2) // length in mm
+  dimensionW          Decimal?      @db.Decimal(6, 2) // width in mm
+  dimensionH          Decimal?      @db.Decimal(6, 2) // height/depth in mm
+  // Gem parcel / lot
+  isLotSale           Boolean       @default(false)
+  lotSize             Int?          // number of stones when isLotSale = true
+  // Contact preference
+  contactPhone        String?       // listing contact override (editable from seller's phone)
+  hideContactPhone    Boolean       @default(false) // route buyers through site messages only
+  // Jewellery
+  jewelleryType       String?
+  ringSize            String?
+  // Services
+  serviceType         String?
+  pricingType         String?       // fixed | starting from | negotiable | per hour | per item
+  serviceArea         String[]      @default([]) // cities served, or ["Island-wide"]
+  turnaroundTime      String?
   // Status
   status              ListingStatus @default(ACTIVE)
   isWholesale         Boolean       @default(false)

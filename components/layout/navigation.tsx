@@ -129,6 +129,30 @@ export default function Navigation() {
     signOut();
   };
 
+  // "Sell" link: guest → login, BUYER → seller registration, SELLER → dashboard
+  const isSeller = session?.user?.role === USER_ROLES.SELLER;
+  const sellHref = !session?.user
+    ? "/login?next=/seller-registration"
+    : isSeller
+      ? "/dashboard"
+      : "/seller-registration";
+  const sellLabel = isSeller ? "Seller Dashboard" : "Sell";
+
+  // Resolve dynamic href/name for subcategory items that depend on auth state.
+  // "sellers > new" = "Become a Seller" for guests/buyers, "New Listing" for sellers.
+  const resolveSubcat = (
+    catId: string,
+    subcat: { id: string; name: string; href: string },
+  ) => {
+    if (catId === "sellers" && subcat.id === "new") {
+      if (isSeller)
+        return { href: "/dashboard/listings/new", name: "New Listing" };
+      if (!session?.user)
+        return { href: "/login?next=/seller-registration", name: subcat.name };
+    }
+    return { href: subcat.href, name: subcat.name };
+  };
+
   // Category content mapping with images
   const categoryContent: Record<string, React.ReactNode> = {
     allCategories: (
@@ -180,18 +204,19 @@ export default function Navigation() {
                   }
                 };
 
+                const resolved = resolveSubcat(hoveredCategory ?? "", subcat);
                 return (
                   <div key={subcat.id} className="flex flex-col items-center">
-                    <Link href={subcat.href} className="group">
+                    <Link href={resolved.href} className="group">
                       <div className="mb-2 w-24 h-24 rounded-lg border-2 flex items-center justify-center transition-all duration-200 group-hover:scale-105 bg-background border-border group-hover:border-primary-light">
                         {getCategoryIcon(hoveredCategory, subcat.id)}
                       </div>
                     </Link>
                     <Link
-                      href={subcat.href}
+                      href={resolved.href}
                       className="text-center py-1 text-light-text hover:text-primary"
                     >
-                      {subcat.name}
+                      {resolved.name}
                     </Link>
                   </div>
                 );
@@ -407,14 +432,25 @@ export default function Navigation() {
                       </p>
                     </div>
                     <div className="py-1">
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setIsProfileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
-                      >
-                        <LayoutDashboard className="h-4 w-4 text-light-text" />
-                        Dashboard
-                      </Link>
+                      {session.user.role === USER_ROLES.SELLER ? (
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
+                        >
+                          <LayoutDashboard className="h-4 w-4 text-light-text" />
+                          Seller Dashboard
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/seller-registration"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-background"
+                        >
+                          <Store className="h-4 w-4" />
+                          Become a Seller
+                        </Link>
+                      )}
                       <Link
                         href="/dashboard/settings"
                         onClick={() => setIsProfileMenuOpen(false)}
@@ -423,16 +459,6 @@ export default function Navigation() {
                         <Settings className="h-4 w-4 text-light-text" />
                         Edit Profile
                       </Link>
-                      {session.user.role === USER_ROLES.BUYER && (
-                        <Link
-                          href="/sell"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
-                        >
-                          <Store className="h-4 w-4 text-light-text" />
-                          Become a Seller
-                        </Link>
-                      )}
                     </div>
                     <div className="border-t border-border py-1">
                       <button
@@ -572,10 +598,10 @@ export default function Navigation() {
                 Help Center
               </Link>
               <Link
-                href="/sell"
+                href={sellHref}
                 className={`whitespace-nowrap text-base font-medium text-light-text hover:text-text`}
               >
-                Sell
+                {sellLabel}
               </Link>
             </div>
           </div>
@@ -614,15 +640,18 @@ export default function Navigation() {
 
                 {expandedMobileCategory === category.id && (
                   <div className="mt-1 ml-4 space-y-1">
-                    {category.subcategories.map((subcat) => (
-                      <Link
-                        href={subcat.href}
-                        key={subcat.id}
-                        className="block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background"
-                      >
-                        {subcat.name}
-                      </Link>
-                    ))}
+                    {category.subcategories.map((subcat) => {
+                      const resolved = resolveSubcat(category.id, subcat);
+                      return (
+                        <Link
+                          href={resolved.href}
+                          key={subcat.id}
+                          className="block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background"
+                        >
+                          {resolved.name}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -688,10 +717,10 @@ export default function Navigation() {
               Help Center
             </Link>
             <Link
-              href="/sell"
+              href={sellHref}
               className={`block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
             >
-              Sell
+              {sellLabel}
             </Link>
           </div>
 
@@ -720,13 +749,23 @@ export default function Navigation() {
                   <Bell className="h-5 w-5 mr-2 text-secondary" />
                   Notifications
                 </Link>
-                <Link
-                  href="/dashboard"
-                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
-                >
-                  <LayoutDashboard className="h-5 w-5 mr-2 text-light-text" />
-                  Dashboard
-                </Link>
+                {session.user.role === USER_ROLES.SELLER ? (
+                  <Link
+                    href="/dashboard"
+                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
+                  >
+                    <LayoutDashboard className="h-5 w-5 mr-2 text-light-text" />
+                    Seller Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/seller-registration"
+                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:bg-background`}
+                  >
+                    <Store className="h-5 w-5 mr-2" />
+                    Become a Seller
+                  </Link>
+                )}
                 <Link
                   href="/dashboard/settings"
                   className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
@@ -734,15 +773,6 @@ export default function Navigation() {
                   <Settings className="h-5 w-5 mr-2 text-light-text" />
                   Edit Profile
                 </Link>
-                {session.user.role === USER_ROLES.BUYER && (
-                  <Link
-                    href="/sell"
-                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
-                  >
-                    <Store className="h-5 w-5 mr-2 text-light-text" />
-                    Become a Seller
-                  </Link>
-                )}
                 <button
                   onClick={handleLogout}
                   className={`flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-left text-premium hover:bg-background`}

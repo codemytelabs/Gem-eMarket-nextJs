@@ -5,8 +5,9 @@ export const registerSchema = z.object({
   email: z.string().email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   phone: z.string().optional(),
-  role: z.enum(["SELLER", "BUYER"]).default("BUYER"),
+  country: z.string().optional(),
   locationCity: z.string().optional(),
+  role: z.enum(["SELLER", "BUYER"]).default("BUYER"),
 });
 
 export const loginSchema = z.object({

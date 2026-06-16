@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { name, email, password, phone, role, locationCity } = parsed.data;
+  const { name, email, password, phone, role, country, locationCity } =
+    parsed.data;
 
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) {
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest) {
         passwordHash,
         phone,
         role,
+        country,
         locationCity,
       },
     });
