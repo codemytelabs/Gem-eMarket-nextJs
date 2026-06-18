@@ -1,0 +1,76 @@
+import { z } from "zod";
+
+const baseListingSchema = z.object({
+  title: z.string().min(5, "Title must be at least 5 characters").max(200),
+  description: z.string().min(20, "Description must be at least 20 characters"),
+  price: z.number().positive("Price must be positive"),
+  currency: z.string().default("USD"),
+  images: z
+    .array(z.string().url())
+    .min(1, "At least one image required")
+    .max(10),
+  category: z.enum(["GEM", "JEWELLERY", "PRECIOUS_METAL", "SERVICE"]),
+  gemType: z.string().optional(),
+  gemOrigin: z.string().optional(),
+  caratWeight: z.number().positive().optional(),
+  treatmentStatus: z.string().optional(),
+  certificationBody: z.string().optional(),
+  certificationNumber: z.string().optional(),
+  certificationImages: z.array(z.string().url()).max(10).optional(),
+  currentLocation: z.string().optional(),
+  // Gem dimensions
+  dimensionL: z.number().positive().optional(),
+  dimensionW: z.number().positive().optional(),
+  dimensionH: z.number().positive().optional(),
+  // Gem parcel
+  isLotSale: z.boolean().optional(),
+  lotSize: z.number().int().positive().optional(),
+  // Contact
+  contactPhone: z.string().optional(),
+  hideContactPhone: z.boolean().optional(),
+  metalType: z.string().optional(),
+  metalPurity: z.string().optional(),
+  weightGrams: z.number().positive().optional(),
+  weightSovereigns: z.number().positive().optional(),
+  // Jewellery
+  jewelleryType: z.string().optional(),
+  ringSize: z.string().optional(),
+  // Services
+  serviceType: z.string().optional(),
+  pricingType: z.string().optional(),
+  serviceArea: z.array(z.string()).optional(),
+  turnaroundTime: z.string().optional(),
+  isWholesale: z.boolean().default(false),
+  // SEO
+  metaTitle: z.string().max(160).optional(),
+  metaDescription: z.string().max(320).optional(),
+});
+
+export const updateListingSchema = baseListingSchema.partial();
+
+export const createListingSchema = baseListingSchema.superRefine(
+  (data, ctx) => {
+    if (
+      (data.category === "GEM" || data.category === "PRECIOUS_METAL") &&
+      data.images.length < 3
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "At least 3 images are required for this category",
+        path: ["images"],
+      });
+    }
+  },
+);
+
+export const seoUpdateSchema = z.object({
+  metaTitle: z.string().max(160).optional(),
+  metaDescription: z.string().max(320).optional(),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens")
+    .optional(),
+});
+
+export type CreateListingInput = z.infer<typeof createListingSchema>;
+export type UpdateListingInput = z.infer<typeof updateListingSchema>;

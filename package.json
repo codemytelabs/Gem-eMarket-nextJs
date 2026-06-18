@@ -1,20 +1,44 @@
 {
-  "name": "rio-pets-frontend",
+  "name": "jewelhub-frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.2",
+    "@aws-sdk/client-s3": "^3.1063.0",
+    "@aws-sdk/s3-request-presigner": "^3.1063.0",
+    "@hookform/resolvers": "^5.4.0",
+    "@prisma/client": "5.22.0",
+    "@upstash/redis": "^1.38.0",
+    "bcryptjs": "^3.0.3",
+    "countries-list": "^3.3.0",
+    "firebase": "^12.14.0",
+    "firebase-admin": "^13.10.0",
     "lucide-react": "^0.492.0",
-    "next": "15.3.1",
+    "next": "^16.2.9",
+    "next-auth": "^5.0.0-beta.31",
     "next-themes": "^0.4.6",
+    "prisma": "^5.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.77.0",
+    "resend": "^6.12.4",
+    "stripe": "^22.2.0",
+    "zod": "^4.4.3",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -29,6 +53,7 @@
     "lint-staged": "^15.5.1",
     "prettier": "^3.5.3",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   },
   "lint-staged": {
@@ -36,5 +61,11 @@
       "eslint --fix",
       "prettier --write"
     ]
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "4.1.4",
+    "@tailwindcss/oxide-linux-x64-musl": "4.1.4",
+    "lightningcss-linux-x64-gnu": "1.29.2",
+    "lightningcss-linux-x64-musl": "1.29.2"
   }
 }

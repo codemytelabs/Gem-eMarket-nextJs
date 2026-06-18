@@ -1,185 +1,108 @@
-"use client";
-
 import Link from "next/link";
+import Image from "next/image";
 import {
   Facebook,
   Twitter,
   Instagram,
   Youtube,
   Mail,
-  Phone,
-  MapPin,
+  Globe,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
-import { colors } from "@/lib/theme/colors";
-import { useThemeStore } from "@/store/themeStore";
 
 export default function Footer() {
-  const { isDarkMode } = useThemeStore();
-
   return (
-    <footer
-      className={`${isDarkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900 border-t border-gray-200"} pt-12 pb-8 transition-colors duration-300`}
-    >
+    <footer className="bg-surface text-text border-t border-border pt-12 pb-8 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Company Info */}
           <div>
-            <div className="flex items-center mb-4">
-              <div className="h-10 w-10 relative mr-2">
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: `linear-gradient(135deg, ${colors.primary.main}, ${colors.accent.features})`,
-                  }}
-                ></div>
-                <div
-                  className={`absolute inset-1 ${isDarkMode ? "bg-gray-800" : "bg-white"} rounded-full flex items-center justify-center transition-colors duration-300`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke={
-                      isDarkMode ? colors.primary.light : colors.primary.main
-                    }
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                </div>
+            <Link href="/" className="flex items-center gap-2 mb-4">
+              <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+                <Image
+                  src="/images/blue-sapphire-gemstone-free-png.webp"
+                  alt="Lumevelo"
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
               </div>
-              <span
-                className="font-bold text-xl"
-                style={{
-                  color: isDarkMode
-                    ? colors.primary.light
-                    : colors.primary.main,
-                }}
-              >
-                Rio Pets
-              </span>
-            </div>
+              <span className="font-bold text-xl text-primary">Lumevelo</span>
+            </Link>
 
-            <p
-              className={`${isDarkMode ? "text-gray-300" : "text-gray-600"} mb-4`}
-            >
-              Your trusted pet marketplace, connecting pet lovers with top
-              breeders, sellers, and essential pet products. From dogs and cats
-              to exotic birds and fish, find everything in one place.
+            <p className="text-light-text mb-4">
+              Lumevelo is a global online marketplace for certified gems,
+              precious metals, and fine jewellery, connecting buyers and
+              verified sellers worldwide, anytime.
             </p>
 
             <div className="flex space-x-4">
-              <a
-                href="#"
-                className={`${isDarkMode ? "text-gray-400 hover:text-primary-400" : "text-gray-400 hover:text-gray-500"}`}
-              >
+              <a href="#" className="text-light-text hover:text-primary">
                 <Facebook size={20} />
               </a>
-              <a
-                href="#"
-                className={`${isDarkMode ? "text-gray-400 hover:text-primary-400" : "text-gray-400 hover:text-gray-500"}`}
-              >
+              <a href="#" className="text-light-text hover:text-primary">
                 <Twitter size={20} />
               </a>
-              <a
-                href="#"
-                className={`${isDarkMode ? "text-gray-400 hover:text-primary-400" : "text-gray-400 hover:text-gray-500"}`}
-              >
+              <a href="#" className="text-light-text hover:text-primary">
                 <Instagram size={20} />
               </a>
-              <a
-                href="#"
-                className={`${isDarkMode ? "text-gray-400 hover:text-primary-400" : "text-gray-400 hover:text-gray-500"}`}
-              >
+              <a href="#" className="text-light-text hover:text-primary">
                 <Youtube size={20} />
               </a>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Shop By Category */}
           <div>
-            <h3
-              className={`text-sm font-semibold ${isDarkMode ? "text-gray-200" : "text-gray-900"} tracking-wider uppercase mb-4`}
-            >
+            <h3 className="text-sm font-semibold text-text tracking-wider uppercase mb-4">
               Shop By Category
             </h3>
             <ul className="space-y-2">
               <li>
-                <Link
-                  href="/category/dogs"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
-                >
-                  Dog Supplies
+                <Link href="/gems" className="text-light-text hover:text-text">
+                  Gems
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/category/cats"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
+                  href="/precious-metals"
+                  className="text-light-text hover:text-text"
                 >
-                  Cat Supplies
+                  Precious Metals
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/category/fish"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
+                  href="/jewellery"
+                  className="text-light-text hover:text-text"
                 >
-                  Fish Supplies
+                  Jewellery
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/category/birds"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
+                  href="/services"
+                  className="text-light-text hover:text-text"
                 >
-                  Bird Supplies
+                  Services
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/category/small-pets"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
+                  href="/sellers"
+                  className="text-light-text hover:text-text"
                 >
-                  Small Pet Supplies
+                  Sellers
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/deals"
-                  className={
-                    isDarkMode
-                      ? "text-yellow-400 hover:text-yellow-300"
-                      : "text-red-600 hover:text-red-800"
-                  }
+                  href="/sell"
+                  className="text-premium hover:text-primary-dark"
                 >
-                  Special Deals
+                  Become a Seller
                 </Link>
               </li>
             </ul>
@@ -187,68 +110,43 @@ export default function Footer() {
 
           {/* Customer Service */}
           <div>
-            <h3
-              className={`text-sm font-semibold ${isDarkMode ? "text-gray-200" : "text-gray-900"} tracking-wider uppercase mb-4`}
-            >
+            <h3 className="text-sm font-semibold text-text tracking-wider uppercase mb-4">
               Customer Service
             </h3>
             <ul className="space-y-2">
               <li>
+                <Link href="/about" className="text-light-text hover:text-text">
+                  About Us
+                </Link>
+              </li>
+              <li>
                 <Link
-                  href="/contact"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
+                  href="/help-center/contact"
+                  className="text-light-text hover:text-text"
                 >
                   Contact Us
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/faqs"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
+                  href="/help-center/faq"
+                  className="text-light-text hover:text-text"
                 >
                   FAQs
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/shipping"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
-                >
-                  Shipping & Delivery
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/complaints"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
+                  href="/help-center/complaints"
+                  className="text-light-text hover:text-text"
                 >
                   Complaints
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/privacy"
-                  className={
-                    isDarkMode
-                      ? "text-gray-300 hover:text-white"
-                      : "text-gray-600 hover:text-gray-900"
-                  }
+                  href="/help-center/privacy-policy"
+                  className="text-light-text hover:text-text"
                 >
                   Privacy Policy
                 </Link>
@@ -258,83 +156,39 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3
-              className={`text-sm font-semibold ${isDarkMode ? "text-gray-200" : "text-gray-900"} tracking-wider uppercase mb-4`}
-            >
+            <h3 className="text-sm font-semibold text-text tracking-wider uppercase mb-4">
               Contact Us
             </h3>
             <ul className="space-y-3">
               <li className="flex">
-                <MapPin
-                  className={`h-5 w-5 ${isDarkMode ? "text-gray-400" : "text-gray-400"} mr-2 flex-shrink-0`}
-                />
-                <span
-                  className={isDarkMode ? "text-gray-300" : "text-gray-600"}
-                >
-                  1234 Paw Avenue, Pet City, PC 12345
+                <Mail className="h-5 w-5 text-light-text mr-2 flex-shrink-0" />
+                <span className="text-light-text">support@lumevelo.com</span>
+              </li>
+              <li className="flex">
+                <Globe className="h-5 w-5 text-light-text mr-2 flex-shrink-0" />
+                <span className="text-light-text">
+                  Serving buyers & sellers worldwide
                 </span>
               </li>
               <li className="flex">
-                <Phone
-                  className={`h-5 w-5 ${isDarkMode ? "text-gray-400" : "text-gray-400"} mr-2 flex-shrink-0`}
-                />
-                <span
-                  className={isDarkMode ? "text-gray-300" : "text-gray-600"}
-                >
-                  (123) 456-7890
+                <Clock className="h-5 w-5 text-light-text mr-2 flex-shrink-0" />
+                <span className="text-light-text">
+                  Online marketplace — available 24/7
                 </span>
-              </li>
-              <li className="flex">
-                <Mail
-                  className={`h-5 w-5 ${isDarkMode ? "text-gray-400" : "text-gray-400"} mr-2 flex-shrink-0`}
-                />
-                <span
-                  className={isDarkMode ? "text-gray-300" : "text-gray-600"}
-                >
-                  support@riopets.example
-                </span>
-              </li>
-              <li>
-                <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
-                  <strong
-                    className={isDarkMode ? "text-white" : "text-gray-800"}
-                  >
-                    Hours:
-                  </strong>{" "}
-                  Mon-Fri: 9am-6pm
-                  <br />
-                  Sat: 10am-5pm, Sun: Closed
-                </p>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Section with Payment Methods and Copyright */}
-        <div
-          className={`border-t ${isDarkMode ? "border-gray-700" : "border-gray-200"} pt-8`}
-        >
+        {/* Bottom Section with Copyright */}
+        <div className="border-t border-border pt-8">
           <div className="md:flex md:items-center md:justify-between">
-            <div className="mb-4 md:mb-0">
-              <p
-                className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}
-              >
-                &copy; 2025 InnoForge Systems. All rights reserved.
-              </p>
-            </div>
-            <div className="flex space-x-6">
-              <img src="/api/placeholder/40/24" alt="Visa" className="h-6" />
-              <img
-                src="/api/placeholder/40/24"
-                alt="Mastercard"
-                className="h-6"
-              />
-              <img
-                src="/api/placeholder/40/24"
-                alt="American Express"
-                className="h-6"
-              />
-              <img src="/api/placeholder/40/24" alt="PayPal" className="h-6" />
+            <p className="text-sm text-light-text">
+              &copy; {new Date().getFullYear()} Lumevelo. All rights reserved.
+            </p>
+            <div className="flex items-center gap-2 text-sm text-light-text mt-4 md:mt-0">
+              <ShieldCheck className="h-4 w-4 text-features" />
+              Secure payments via Stripe & PayHere
             </div>
           </div>
         </div>

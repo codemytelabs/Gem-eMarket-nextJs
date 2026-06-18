@@ -1,23 +1,29 @@
-export interface RegisterUserInput {
+export interface RegisterSellerInput {
   name: string;
-  username: string;
+  email: string;
   password: string;
-  role: "seller" | "buyer" | "admin";
   phone: string;
-  location?: string;
+  locationCity?: string;
 }
 
-export interface LoginUserInput {
-  username: string;
+export interface RegisterBuyerInput {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginInput {
+  email: string;
   password: string;
 }
 
 export interface AuthResponse {
-  token: string;
   user: {
     id: string;
     name: string;
-    username: string;
+    email: string;
     role: string;
+    planName: string;
+    shopSlug?: string;
   };
 }

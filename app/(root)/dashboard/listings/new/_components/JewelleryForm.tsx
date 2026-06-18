@@ -1,0 +1,239 @@
+"use client";
+
+import { useState } from "react";
+import { GEM_TYPE, JEWELLERY_TYPE, METAL_TYPE } from "@/types/enums";
+import {
+  Field,
+  TextInput,
+  TextArea,
+  SelectInput,
+  Toggle,
+} from "./shared/FormFields";
+import { ImageUploader } from "./shared/ImageUploader";
+import { CertificationUploader } from "./shared/CertificationUploader";
+import { LocationField } from "./shared/LocationField";
+import { PriceFields } from "./shared/PriceFields";
+import { SubmitBar } from "./shared/SubmitBar";
+import { useCreateListing } from "./shared/useCreateListing";
+import { COUNTRIES } from "@/lib/utils/countries";
+
+interface JewelleryFormProps {
+  onBack: () => void;
+  onSuccess: () => void;
+  sellerLocation?: string;
+  sellerCountry?: string;
+  sellerPhone?: string;
+}
+
+export function JewelleryForm({
+  onBack,
+  onSuccess,
+  sellerLocation = "",
+  sellerCountry = "LK",
+}: JewelleryFormProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [jewelleryType, setJewelleryType] = useState("");
+  const [metalType, setMetalType] = useState("");
+  const [metalPurity, setMetalPurity] = useState("");
+  const [gemType, setGemType] = useState("");
+  const [weightGrams, setWeightGrams] = useState("");
+  const [ringSize, setRingSize] = useState("");
+  const [origin, setOrigin] = useState("");
+  const [locationCountry, setLocationCountry] = useState(sellerCountry);
+  const [locationCity, setLocationCity] = useState(sellerLocation);
+  const [certificationImages, setCertificationImages] = useState<string[]>([]);
+  const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState("USD");
+  const [isWholesale, setIsWholesale] = useState(false);
+
+  const { submit, loading, error } = useCreateListing(onSuccess);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const countryName =
+      COUNTRIES.find((c) => c.code === locationCountry)?.name ??
+      locationCountry;
+    const currentLocation = locationCity
+      ? `${locationCity}, ${countryName}`
+      : countryName;
+    submit({
+      title,
+      description,
+      images,
+      category: "JEWELLERY",
+      jewelleryType: jewelleryType || undefined,
+      metalType: metalType || undefined,
+      metalPurity: metalPurity || undefined,
+      gemType: gemType || undefined,
+      weightGrams: weightGrams ? Number(weightGrams) : undefined,
+      ringSize: ringSize || undefined,
+      gemOrigin: origin || undefined,
+      currentLocation: currentLocation || undefined,
+      certificationImages,
+      price: price ? Number(price) : undefined,
+      currency,
+      isWholesale,
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <Field label="Title" required>
+        <TextInput
+          placeholder="e.g., 18K White Gold Sapphire Ring"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+      </Field>
+
+      <Field label="Description" required>
+        <TextArea
+          rows={4}
+          placeholder="Describe the piece — craftsmanship, gemstone details, finish, and any hallmarks..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+        />
+      </Field>
+
+      <ImageUploader
+        images={images}
+        onChange={setImages}
+        max={10}
+        label="Jewellery Photos"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field label="Jewellery Type" required>
+          <SelectInput
+            value={jewelleryType}
+            onChange={(e) => setJewelleryType(e.target.value)}
+            required
+          >
+            <option value="">Select type</option>
+            {Object.values(JEWELLERY_TYPE).map((j) => (
+              <option key={j} value={j}>
+                {j}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+
+        {jewelleryType === JEWELLERY_TYPE.RING && (
+          <Field
+            label="Ring Size"
+            hint="International size or circumference in mm"
+          >
+            <TextInput
+              placeholder="e.g., 16 or US 7.5"
+              value={ringSize}
+              onChange={(e) => setRingSize(e.target.value)}
+            />
+          </Field>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field label="Metal Type">
+          <SelectInput
+            value={metalType}
+            onChange={(e) => setMetalType(e.target.value)}
+          >
+            <option value="">Select metal</option>
+            {Object.values(METAL_TYPE).map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+
+        <Field label="Metal Purity / Hallmark" hint="e.g., 18K, 925, 950">
+          <TextInput
+            placeholder="e.g., 18K"
+            value={metalPurity}
+            onChange={(e) => setMetalPurity(e.target.value)}
+          />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field
+          label="Accent Gemstone"
+          hint="Optional — the main gem set in the piece"
+        >
+          <SelectInput
+            value={gemType}
+            onChange={(e) => setGemType(e.target.value)}
+          >
+            <option value="">None / Not specified</option>
+            {Object.values(GEM_TYPE).map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </SelectInput>
+        </Field>
+
+        <Field label="Total Weight (grams)" hint="Optional">
+          <TextInput
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="e.g., 8.5"
+            value={weightGrams}
+            onChange={(e) => setWeightGrams(e.target.value)}
+          />
+        </Field>
+      </div>
+
+      <Field
+        label="Origin"
+        hint="Optional — country or region where the piece was crafted"
+      >
+        <TextInput
+          placeholder="e.g., Italy, Thailand, Sri Lanka"
+          value={origin}
+          onChange={(e) => setOrigin(e.target.value)}
+        />
+      </Field>
+
+      <LocationField
+        country={locationCountry}
+        city={locationCity}
+        onCountryChange={setLocationCountry}
+        onCityChange={setLocationCity}
+        required
+        label="Current Location"
+        hint="Where is the item now?"
+        cityPlaceholder="City / Region"
+      />
+
+      <CertificationUploader
+        images={certificationImages}
+        onChange={setCertificationImages}
+        label="Hallmark / certification documents (optional)"
+        hint="Upload photos of hallmark certificates, gem lab reports, or assay documents."
+      />
+
+      <PriceFields
+        price={price}
+        currency={currency}
+        onPriceChange={setPrice}
+        onCurrencyChange={setCurrency}
+      />
+
+      <Toggle
+        checked={isWholesale}
+        onChange={setIsWholesale}
+        label="List as wholesale"
+        hint="For bulk or trade buyers."
+      />
+
+      <SubmitBar loading={loading} error={error} onBack={onBack} />
+    </form>
+  );
+}
