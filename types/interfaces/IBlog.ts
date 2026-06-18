@@ -1,11 +1,19 @@
-export interface IBlog {
+export interface IBlogPost {
   id: string;
   title: string;
-  excerpt: string;
+  slug: string;
+  excerpt?: string;
   content: string;
-  author: string;
-  images: string[];
-  tags: string[];
-  published_at: string;
-  read_time: number;
+  featuredImageUrl?: string;
+  authorId: string;
+  authorName: string;
+  isSponsored: boolean;
+  sponsorSellerId?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  focusKeyword?: string;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  publishedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
