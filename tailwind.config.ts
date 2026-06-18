@@ -1,4 +1,4 @@
-import { colors } from "@/lib/theme/colors";
+import { colors } from "./lib/theme/colors";
 
 module.exports = {
   darkMode: "class",
