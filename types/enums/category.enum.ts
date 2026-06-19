@@ -19,6 +19,7 @@ export enum GEM_TYPE {
   AQUAMARINE = "Aquamarine",
   TOURMALINE = "Tourmaline",
   GARNET = "Garnet",
+  ZIRCON = "Zircon",
   OTHER = "Other",
 }
 
@@ -85,11 +86,15 @@ export enum JEWELLERY_TYPE {
 export enum SERVICE_TYPE {
   GEM_CUTTING = "Gem Cutting & Polishing",
   CERTIFICATION = "Certification & Grading",
+  GOLD_TESTING = "Gold & Metal Testing",
   APPRAISAL = "Appraisal & Valuation",
-  JEWELLERY_REPAIR = "Jewellery Repair & Resizing",
   CUSTOM_DESIGN = "Custom Jewellery Design",
+  JEWELLERY_REPAIR = "Jewellery Repair & Resizing",
   ENGRAVING = "Engraving",
+  TRANSPORT = "Secure Transport & Courier",
   CONSULTATION = "Consultation",
+  TRAINING = "Gemology Training",
+  MINING_TOURS = "Gem Mine Tours",
   OTHER = "Other",
 }
 

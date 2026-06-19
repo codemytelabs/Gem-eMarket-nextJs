@@ -13,13 +13,34 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  searchParams: Promise<{ type?: string; q?: string; page?: string }>;
+  searchParams: Promise<{
+    type?: string;
+    q?: string;
+    page?: string;
+    minPrice?: string;
+    maxPrice?: string;
+  }>;
 }
 
+const PRICE_TIERS = [
+  { label: "Under $500", min: undefined, max: 500 },
+  { label: "$500 – $2,000", min: 500, max: 2000 },
+  { label: "$2,000 – $10,000", min: 2000, max: 10000 },
+  { label: "$10,000+", min: 10000, max: undefined },
+] as const;
+
 export default async function GemsPage({ searchParams }: Props) {
-  const { type, q, page: pageStr } = await searchParams;
+  const {
+    type,
+    q,
+    page: pageStr,
+    minPrice: minPriceStr,
+    maxPrice: maxPriceStr,
+  } = await searchParams;
   const page = parseInt(pageStr ?? "1");
   const limit = 24;
+  const minPrice = minPriceStr ? parseFloat(minPriceStr) : undefined;
+  const maxPrice = maxPriceStr ? parseFloat(maxPriceStr) : undefined;
 
   const where: Prisma.ListingWhereInput = { status: "ACTIVE", category: "GEM" };
   if (type) where.gemType = { contains: type, mode: "insensitive" };
@@ -28,6 +49,22 @@ export default async function GemsPage({ searchParams }: Props) {
       { title: { contains: q, mode: "insensitive" } },
       { gemType: { contains: q, mode: "insensitive" } },
     ];
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    where.price = {
+      ...(minPrice !== undefined ? { gte: minPrice } : {}),
+      ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+    };
+  }
+
+  const priceTierHref = (min?: number, max?: number) => {
+    const params = new URLSearchParams();
+    if (type) params.set("type", type);
+    if (q) params.set("q", q);
+    if (min !== undefined) params.set("minPrice", String(min));
+    if (max !== undefined) params.set("maxPrice", String(max));
+    const qs = params.toString();
+    return qs ? `/gems?${qs}` : "/gems";
+  };
 
   const [listings, total] = await Promise.all([
     db.listing.findMany({
@@ -55,7 +92,7 @@ export default async function GemsPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Hero */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
@@ -116,6 +153,37 @@ export default async function GemsPage({ searchParams }: Props) {
           ))}
         </div>
 
+        {/* Price range filter */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-1">
+            Price:
+          </span>
+          {PRICE_TIERS.map((tier) => {
+            const active = minPrice === tier.min && maxPrice === tier.max;
+            return (
+              <Link
+                key={tier.label}
+                href={priceTierHref(tier.min, tier.max)}
+                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                  active
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                {tier.label}
+              </Link>
+            );
+          })}
+          {(minPrice !== undefined || maxPrice !== undefined) && (
+            <Link
+              href={priceTierHref(undefined, undefined)}
+              className="text-sm text-blue-600 hover:underline ml-1"
+            >
+              Reset price
+            </Link>
+          )}
+        </div>
+
         {/* Results */}
         <div className="flex items-center justify-between mb-5">
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -143,22 +211,30 @@ export default async function GemsPage({ searchParams }: Props) {
         {/* Pagination */}
         {total > limit && (
           <div className="flex justify-center gap-2 mt-8">
-            {page > 1 && (
-              <Link
-                href={`/gems?page=${page - 1}${type ? `&type=${type}` : ""}${q ? `&q=${q}` : ""}`}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                ← Previous
-              </Link>
-            )}
-            {page * limit < total && (
-              <Link
-                href={`/gems?page=${page + 1}${type ? `&type=${type}` : ""}${q ? `&q=${q}` : ""}`}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                Next →
-              </Link>
-            )}
+            {(() => {
+              const base = priceTierHref(minPrice, maxPrice);
+              const sep = base.includes("?") ? "&" : "?";
+              return (
+                <>
+                  {page > 1 && (
+                    <Link
+                      href={`${base}${sep}page=${page - 1}`}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      ← Previous
+                    </Link>
+                  )}
+                  {page * limit < total && (
+                    <Link
+                      href={`${base}${sep}page=${page + 1}`}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      Next →
+                    </Link>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </div>

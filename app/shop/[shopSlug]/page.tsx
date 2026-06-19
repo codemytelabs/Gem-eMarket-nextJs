@@ -55,7 +55,7 @@ export default async function ShopProfilePage({ params }: Props) {
   const plan = seller.subscription.plan;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Banner */}
       <div className="relative h-48 md:h-64 bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl overflow-hidden">
         {seller.shopBannerUrl && (
