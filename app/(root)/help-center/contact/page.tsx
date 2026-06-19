@@ -7,7 +7,7 @@ export default function ContactPage() {
   const { isDarkMode } = useThemeStore();
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <h1
         className={`text-3xl font-bold mb-6 ${isDarkMode ? "text-white" : ""}`}
       >
