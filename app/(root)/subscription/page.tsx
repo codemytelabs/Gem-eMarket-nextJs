@@ -153,7 +153,7 @@ export default async function SubscriptionPage({ searchParams }: Props) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
             Subscription <span className="text-blue-600">Plans</span>

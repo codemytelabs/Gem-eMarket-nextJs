@@ -50,7 +50,7 @@ export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex-1 px-2 py-4 space-y-0.5">
+    <nav className="px-2 py-4 space-y-0.5">
       {navItems.map(({ href, label, icon: Icon, exact }) => {
         const isActive = exact ? pathname === href : pathname.startsWith(href);
         return (

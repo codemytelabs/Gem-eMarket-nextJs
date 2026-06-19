@@ -9,7 +9,7 @@ export default function About() {
 
   return (
     <div
-      className={`max-w-4xl mx-auto ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}
+      className={`max-w-4xl mx-auto px-4 sm:px-6 py-8 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}
     >
       <section className="mb-12 text-center">
         <h1
