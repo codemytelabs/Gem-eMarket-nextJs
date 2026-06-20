@@ -1,47 +1,67 @@
+interface SignResponse {
+  timestamp?: number;
+  signature?: string;
+  folder?: string;
+  apiKey?: string;
+  cloudName?: string;
+  message?: string;
+}
+
 export async function uploadImage(
   file: File,
   folder: "listings" | "documents" = "listings",
 ): Promise<string> {
-  const presignRes = await fetch("/api/upload", {
+  const signRes = await fetch("/api/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      filename: file.name,
       contentType: file.type,
       folder,
       sizeBytes: file.size,
     }),
   });
 
-  let presignData: {
-    uploadUrl?: string;
-    publicUrl?: string;
-    message?: string;
-  } = {};
-  const ct = presignRes.headers.get("content-type") ?? "";
+  let signData: SignResponse = {};
+  const ct = signRes.headers.get("content-type") ?? "";
   if (ct.includes("application/json")) {
-    presignData = await presignRes.json();
+    signData = await signRes.json();
   }
 
-  if (!presignRes.ok) {
+  if (!signRes.ok) {
+    throw new Error(signData.message ?? `Upload failed (${signRes.status})`);
+  }
+
+  const {
+    timestamp,
+    signature,
+    folder: cloudFolder,
+    apiKey,
+    cloudName,
+  } = signData;
+  if (!timestamp || !signature || !apiKey || !cloudName) {
+    throw new Error("No upload credentials received from server");
+  }
+
+  // Browser uploads straight to Cloudinary — our server never touches the
+  // file bytes, so it never spends bandwidth or memory on the upload itself.
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("api_key", apiKey);
+  formData.append("timestamp", String(timestamp));
+  formData.append("signature", signature);
+  formData.append("folder", cloudFolder!);
+
+  const uploadRes = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    { method: "POST", body: formData },
+  );
+
+  const uploadData = await uploadRes.json();
+  if (!uploadRes.ok) {
     throw new Error(
-      presignData.message ?? `Upload failed (${presignRes.status})`,
+      uploadData.error?.message ?? "Failed to upload file to Cloudinary",
     );
   }
 
-  if (!presignData.uploadUrl) {
-    throw new Error("No upload URL received from server");
-  }
-
-  const putRes = await fetch(presignData.uploadUrl, {
-    method: "PUT",
-    headers: { "Content-Type": file.type },
-    body: file,
-  });
-
-  if (!putRes.ok) {
-    throw new Error("Failed to upload file to storage. Please try again.");
-  }
-
-  return presignData.publicUrl as string;
+  return uploadData.secure_url as string;
 }

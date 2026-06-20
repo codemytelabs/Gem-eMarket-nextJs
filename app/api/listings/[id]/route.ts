@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { updateListingSchema } from "@/lib/validations/listing";
 import { invalidateCache } from "@/lib/redis";
+import { deleteAsset } from "@/lib/cloudinary";
 
 export async function GET(
   req: NextRequest,
@@ -83,6 +84,17 @@ export async function PUT(
     data: parsed.data,
   });
 
+  // Clean up any images/certs that were replaced or removed in this edit
+  const removedImages = [
+    ...existing.images.filter((url) => !updated.images.includes(url)),
+    ...existing.certificationImages.filter(
+      (url) => !updated.certificationImages.includes(url),
+    ),
+  ];
+  await Promise.all(
+    removedImages.map((url) => deleteAsset(url).catch(() => {})),
+  );
+
   await invalidateCache(`listings:*`);
   return NextResponse.json(updated);
 }
@@ -106,5 +118,12 @@ export async function DELETE(
   }
 
   await db.listing.delete({ where: { id } });
+
+  await Promise.all(
+    [...existing.images, ...existing.certificationImages].map((url) =>
+      deleteAsset(url).catch(() => {}),
+    ),
+  );
+
   return NextResponse.json({ message: "Listing deleted" });
 }

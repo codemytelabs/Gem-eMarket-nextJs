@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import {
-  getPresignedUploadUrl,
-  buildStorageKey,
-  getPublicUrl,
-} from "@/lib/storage";
+import { buildUploadFolder, signUploadParams } from "@/lib/cloudinary";
+import { rateLimit } from "@/lib/redis";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const DOCUMENT_TYPES = [...IMAGE_TYPES, "application/pdf", "image/tiff"];
@@ -16,12 +13,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const {
-    filename,
-    contentType,
-    folder = "listings",
-    sizeBytes,
-  } = await req.json();
+  const { allowed: withinRateLimit } = await rateLimit(
+    `upload:${session.user.id}`,
+    20,
+    60,
+  );
+  if (!withinRateLimit) {
+    return NextResponse.json(
+      { message: "Too many uploads. Please wait a moment and try again." },
+      { status: 429 },
+    );
+  }
+
+  const { contentType, folder = "listings", sizeBytes } = await req.json();
 
   const allowed = folder === "documents" ? DOCUMENT_TYPES : IMAGE_TYPES;
   if (!allowed.includes(contentType)) {
@@ -43,18 +47,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  try {
-    const key = buildStorageKey(folder, session.user.id, filename);
-    const uploadUrl = await getPresignedUploadUrl(key, contentType, 300);
-    const publicUrl = getPublicUrl(key);
-    return NextResponse.json({ uploadUrl, publicUrl, key });
-  } catch (err) {
-    console.error("[upload] presign error:", err);
-    return NextResponse.json(
-      {
-        message: "Storage service error. Please try again or contact support.",
-      },
-      { status: 500 },
-    );
-  }
+  // Only sign the params the client actually sends back — Cloudinary requires
+  // every non-file param in the signature, in this exact set.
+  const timestamp = Math.round(Date.now() / 1000);
+  const uploadFolder = buildUploadFolder(folder, session.user.id);
+  const signature = signUploadParams({ timestamp, folder: uploadFolder });
+
+  return NextResponse.json({
+    timestamp,
+    signature,
+    folder: uploadFolder,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  });
 }
