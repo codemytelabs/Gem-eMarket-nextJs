@@ -79,5 +79,9 @@ export const enquirySchema = z.object({
   firebaseIdToken: z.string().optional(),
 });
 
+export const adminPlanUpdateSchema = z.object({
+  planId: z.string().min(1),
+});
+
 export type UpgradeInput = z.infer<typeof upgradeSchema>;
 export type EnquiryInput = z.infer<typeof enquirySchema>;

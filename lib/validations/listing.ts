@@ -72,5 +72,13 @@ export const seoUpdateSchema = z.object({
     .optional(),
 });
 
+export const adminListingActionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("approve") }),
+  z.object({
+    action: z.literal("request_changes"),
+    reason: z.string().min(1, "A reason is required"),
+  }),
+]);
+
 export type CreateListingInput = z.infer<typeof createListingSchema>;
 export type UpdateListingInput = z.infer<typeof updateListingSchema>;

@@ -226,6 +226,7 @@ model Listing {
   turnaroundTime      String?
   // Status
   status              ListingStatus @default(ACTIVE)
+  rejectionReason     String?       @db.Text
   isWholesale         Boolean       @default(false)
   // Boost
   isBoosted           Boolean       @default(false)
@@ -262,6 +263,7 @@ enum ListingStatus {
   PAUSED
   EXPIRED
   PENDING_REVIEW
+  CHANGES_REQUESTED
   REJECTED
 }
 
