@@ -55,6 +55,7 @@ model User {
   whatsappBroadcastOptIns WhatsappBroadcastOptIn[] @relation("SellerOptIns")
   whatsappBroadcastSubs  WhatsappBroadcastOptIn[] @relation("BuyerOptIns")
   reelUploads             ReelUpload[]
+  fcmTokens               FcmToken[]
 
   @@map("users")
 }
@@ -294,11 +295,12 @@ model Enquiry {
   sellerId           String
   buyerId            String?
   buyerName          String
-  buyerPhone         String
+  buyerPhone         String?
   buyerPhoneVerified Boolean  @default(false)
   buyerEmail         String?
   message            String
   isRead             Boolean  @default(false)
+  conversationId     String?  // Firestore conversation id, set once a chat thread exists
   createdAt          DateTime @default(now())
 
   listing Listing @relation(fields: [listingId], references: [id])
@@ -306,6 +308,20 @@ model Enquiry {
   buyer   User?   @relation("BuyerEnquiries", fields: [buyerId], references: [id])
 
   @@map("enquiries")
+}
+
+// ─── FCM device tokens (web push) ──────────────────────────────────────────────
+
+model FcmToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("fcm_tokens")
 }
 
 // ─── Listing Boosts ───────────────────────────────────────────────────────────

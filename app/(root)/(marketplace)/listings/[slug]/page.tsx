@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShieldCheck, MapPin, MessageSquare, Clock, Globe } from "lucide-react";
-import EnquiryModal from "./_components/EnquiryModal";
+import { ShieldCheck, MapPin, Clock, Globe } from "lucide-react";
+import MessageSellerButton from "./_components/MessageSellerButton";
 import { ListingGallery } from "@/components/listings/ListingGallery";
 import { safeJsonLd } from "@/lib/utils/json-ld";
 
@@ -221,24 +221,15 @@ export default async function ListingPage({ params }: Props) {
                 </Link>
               )}
 
-              {/* Enquiry button — opens modal */}
-              <EnquiryModal
+              {/* Message Seller (direct chat) + Call/WhatsApp fallback */}
+              <MessageSellerButton
                 listingId={listing.id}
                 listingTitle={listing.title}
+                contactPhone={
+                  listing.hideContactPhone ? null : listing.contactPhone
+                }
+                whatsappNumber={seller.whatsappNumber}
               />
-
-              {/* WhatsApp direct (if seller has it) */}
-              {seller.whatsappNumber && (
-                <a
-                  href={`https://wa.me/${seller.whatsappNumber.replace(/\D/g, "")}?text=Hi, I saw your listing "${listing.title}" on GemCeylon.`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 flex items-center justify-center gap-2 w-full py-2.5 border border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm font-semibold rounded-lg transition-colors"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  WhatsApp seller
-                </a>
-              )}
             </div>
           </div>
         </div>

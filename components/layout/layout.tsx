@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { useThemeStore } from "@/store/themeStore";
 import Navigation from "./navigation";
 import Footer from "./footer";
+import MessagingProvider from "@/components/messaging/MessagingProvider";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,6 +33,7 @@ export default function Layout({ children }: LayoutProps) {
         {children}
       </main>
       <Footer />
+      <MessagingProvider />
     </div>
   );
 }

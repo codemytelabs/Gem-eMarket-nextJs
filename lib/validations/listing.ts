@@ -79,6 +79,10 @@ export const adminListingActionSchema = z.discriminatedUnion("action", [
     action: z.literal("request_changes"),
     reason: z.string().min(1, "A reason is required"),
   }),
+  z.object({
+    action: z.literal("reject"),
+    reason: z.string().min(1, "A reason is required"),
+  }),
 ]);
 
 export type CreateListingInput = z.infer<typeof createListingSchema>;

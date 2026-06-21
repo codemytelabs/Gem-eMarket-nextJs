@@ -26,6 +26,9 @@ import { categories, featuredLinks } from "@/config/const/navLinks";
 import { useThemeStore } from "@/store/themeStore";
 import { useTheme } from "next-themes";
 import { USER_ROLES } from "@/types/enums/role.enum";
+import { useMessagingStore } from "@/store/messagingStore";
+import MessagesPopover from "@/components/messaging/MessagesPopover";
+import NotificationsDropdown from "@/components/messaging/NotificationsDropdown";
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,11 +44,34 @@ export default function Navigation() {
 
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const notificationsRef = useRef<HTMLDivElement | null>(null);
+  const messagesRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const allCategoriesCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
+
+  const isMessagesPopoverOpen = useMessagingStore(
+    (s) => s.isMessagesPopoverOpen,
+  );
+  const isNotificationsPanelOpen = useMessagingStore(
+    (s) => s.isNotificationsPanelOpen,
+  );
+  const toggleMessagesPopover = useMessagingStore(
+    (s) => s.toggleMessagesPopover,
+  );
+  const closeMessagesPopover = useMessagingStore((s) => s.closeMessagesPopover);
+  const toggleNotificationsPanel = useMessagingStore(
+    (s) => s.toggleNotificationsPanel,
+  );
+  const closeNotificationsPanel = useMessagingStore(
+    (s) => s.closeNotificationsPanel,
+  );
+  const unreadMessagesTotal = useMessagingStore((s) => s.unreadMessagesTotal());
+  const unreadNotificationsTotal = useMessagingStore((s) =>
+    s.unreadNotificationsTotal(),
+  );
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -62,13 +88,25 @@ export default function Navigation() {
       ) {
         setIsProfileMenuOpen(false);
       }
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
+        closeNotificationsPanel();
+      }
+      if (
+        messagesRef.current &&
+        !messagesRef.current.contains(event.target as Node)
+      ) {
+        closeMessagesPopover();
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [closeNotificationsPanel, closeMessagesPopover]);
 
   const changeTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -328,15 +366,23 @@ export default function Navigation() {
             </button>
 
             {session?.user && (
-              <Link
-                href="/notifications"
-                className="flex items-center hover:text-gray-600 relative"
-              >
-                <Bell className="h-5 w-5 text-secondary" />
-                <span className="absolute -top-2 -right-2 rounded-full h-5 w-5 flex items-center justify-center text-xs text-white bg-premium">
-                  5
-                </span>
-              </Link>
+              <div className="relative" ref={notificationsRef}>
+                <button
+                  onClick={toggleNotificationsPanel}
+                  className="flex items-center hover:text-gray-600 relative"
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-5 w-5 text-secondary" />
+                  {unreadNotificationsTotal > 0 && (
+                    <span className="absolute -top-2 -right-2 rounded-full h-5 w-5 flex items-center justify-center text-xs text-white bg-premium">
+                      {unreadNotificationsTotal > 9
+                        ? "9+"
+                        : unreadNotificationsTotal}
+                    </span>
+                  )}
+                </button>
+                {isNotificationsPanelOpen && <NotificationsDropdown />}
+              </div>
             )}
 
             {/* Profile menu / Sign In */}
@@ -692,13 +738,38 @@ export default function Navigation() {
                   Saved Items
                 </Link>
                 <Link
-                  href="/notifications"
+                  href="/messages"
                   onClick={closeMobileMenu}
-                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
+                  className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background relative`}
                 >
-                  <Bell className="h-5 w-5 mr-2 text-secondary" />
-                  Notifications
+                  <MessageCircle className="h-5 w-5 mr-2 text-primary" />
+                  Messages
+                  {unreadMessagesTotal > 0 && (
+                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-premium text-xs text-white">
+                      {unreadMessagesTotal > 9 ? "9+" : unreadMessagesTotal}
+                    </span>
+                  )}
                 </Link>
+                <div className="relative">
+                  <button
+                    onClick={() => {
+                      closeMobileMenu();
+                      toggleNotificationsPanel();
+                    }}
+                    className={`flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
+                  >
+                    <Bell className="h-5 w-5 mr-2 text-secondary" />
+                    Notifications
+                    {unreadNotificationsTotal > 0 && (
+                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-premium text-xs text-white">
+                        {unreadNotificationsTotal > 9
+                          ? "9+"
+                          : unreadNotificationsTotal}
+                      </span>
+                    )}
+                  </button>
+                  {isNotificationsPanelOpen && <NotificationsDropdown />}
+                </div>
                 {session.user.role === USER_ROLES.SELLER ? (
                   <Link
                     href="/dashboard"
@@ -762,16 +833,21 @@ export default function Navigation() {
 
       {/* Floating message button - logged-in users only */}
       {session?.user && (
-        <Link
-          href="/messages"
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-dark transition-colors"
-          aria-label="Messages"
-        >
-          <MessageCircle className="h-7 w-7" />
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-premium text-xs text-white">
-            2
-          </span>
-        </Link>
+        <div className="fixed bottom-6 right-6 z-50" ref={messagesRef}>
+          <button
+            onClick={toggleMessagesPopover}
+            className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-dark transition-colors"
+            aria-label="Messages"
+          >
+            <MessageCircle className="h-7 w-7" />
+            {unreadMessagesTotal > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-premium text-xs text-white">
+                {unreadMessagesTotal > 9 ? "9+" : unreadMessagesTotal}
+              </span>
+            )}
+          </button>
+          {isMessagesPopoverOpen && <MessagesPopover />}
+        </div>
       )}
     </nav>
   );

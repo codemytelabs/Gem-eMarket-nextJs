@@ -67,21 +67,8 @@ export const boostSchema = z.object({
   gateway: z.enum(["PAYHERE"]).optional(),
 });
 
-export const enquirySchema = z.object({
-  listingId: z.string().min(1),
-  buyerName: z.string().min(2),
-  buyerPhone: z.string().min(8),
-  buyerEmail: z.string().email().optional(),
-  message: z
-    .string()
-    .min(10, "Message must be at least 10 characters")
-    .max(1000),
-  firebaseIdToken: z.string().optional(),
-});
-
 export const adminPlanUpdateSchema = z.object({
   planId: z.string().min(1),
 });
 
 export type UpgradeInput = z.infer<typeof upgradeSchema>;
-export type EnquiryInput = z.infer<typeof enquirySchema>;
