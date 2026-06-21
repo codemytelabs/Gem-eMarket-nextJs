@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { getSellerPlanName } from "@/lib/getSellerPlanName";
 
 const settingsSchema = z.object({
   name: z.string().min(2).max(100),
@@ -51,7 +52,8 @@ export async function PUT(req: NextRequest) {
   }
 
   // Only Dealer plan can set custom SEO meta
-  const allowCustomSeo = session.user.planName === "dealer";
+  const planName = await getSellerPlanName(session.user.id);
+  const allowCustomSeo = planName === "dealer";
 
   const updated = await db.user.update({
     where: { id: session.user.id },

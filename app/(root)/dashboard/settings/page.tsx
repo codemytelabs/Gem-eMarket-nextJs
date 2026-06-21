@@ -1,12 +1,15 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import SettingsForm from "./_components/SettingsForm";
+import { getSellerPlanName } from "@/lib/getSellerPlanName";
 
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const session = await auth();
   if (!session) return null;
+
+  const planName = await getSellerPlanName(session.user.id);
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
@@ -29,7 +32,7 @@ export default async function SettingsPage() {
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
         Settings
       </h1>
-      <SettingsForm user={user!} planName={session.user.planName} />
+      <SettingsForm user={user!} planName={planName} />
     </div>
   );
 }

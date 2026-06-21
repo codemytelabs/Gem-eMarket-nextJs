@@ -187,11 +187,15 @@ export default function Navigation() {
               className={`flex items-center gap-2 p-2 cursor-pointer rounded ${hoveredCategory === category.id ? "bg-background" : ""}`}
               onMouseEnter={() => handleCategoryHover(category.id)}
             >
-              <img
-                src={category.image}
-                alt=""
-                className="w-8 h-8 rounded object-cover flex-shrink-0"
-              />
+              <div className="relative w-8 h-8 rounded flex-shrink-0 overflow-hidden skeleton-shimmer">
+                <Image
+                  src={category.image}
+                  alt=""
+                  fill
+                  sizes="32px"
+                  className="object-cover"
+                />
+              </div>
               <span className="font-medium text-text">{category.name}</span>
             </div>
           ))}
@@ -213,11 +217,13 @@ export default function Navigation() {
                       className="group"
                       onClick={closeDropdown}
                     >
-                      <div className="mb-2 w-24 h-24 rounded-lg border-2 overflow-hidden transition-all duration-200 group-hover:scale-105 bg-background border-border group-hover:border-primary-light">
-                        <img
+                      <div className="relative mb-2 w-24 h-24 rounded-lg border-2 overflow-hidden transition-all duration-200 group-hover:scale-105 skeleton-shimmer border-border group-hover:border-primary-light">
+                        <Image
                           src={subcat.image}
                           alt={resolved.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="96px"
+                          className="object-cover"
                         />
                       </div>
                     </Link>

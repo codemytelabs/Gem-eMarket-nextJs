@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import {
-  getPresignedUploadUrl,
-  buildStorageKey,
-  getPublicUrl,
-} from "@/lib/storage";
+import { buildUploadFolder, signUploadParams } from "@/lib/cloudinary";
+import { rateLimit } from "@/lib/redis";
+import { getReelQuotaStatus } from "@/lib/reelQuota";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const DOCUMENT_TYPES = [...IMAGE_TYPES, "application/pdf", "image/tiff"];
+const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -16,45 +16,80 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const {
-    filename,
-    contentType,
-    folder = "listings",
-    sizeBytes,
-  } = await req.json();
-
-  const allowed = folder === "documents" ? DOCUMENT_TYPES : IMAGE_TYPES;
-  if (!allowed.includes(contentType)) {
+  const { allowed: withinRateLimit } = await rateLimit(
+    `upload:${session.user.id}`,
+    20,
+    60,
+  );
+  if (!withinRateLimit) {
     return NextResponse.json(
-      {
-        message:
-          folder === "documents"
-            ? "Only JPEG, PNG, WebP, AVIF, TIFF, and PDF files are allowed"
-            : "Only JPEG, PNG, WebP, and AVIF images are allowed",
-      },
-      { status: 400 },
+      { message: "Too many uploads. Please wait a moment and try again." },
+      { status: 429 },
     );
   }
 
-  if (sizeBytes && sizeBytes > MAX_SIZE_BYTES) {
-    return NextResponse.json(
-      { message: "File exceeds the 10 MB limit" },
-      { status: 400 },
-    );
+  const { contentType, folder = "listings", sizeBytes } = await req.json();
+
+  if (folder === "reels") {
+    const baseContentType =
+      typeof contentType === "string" ? contentType.split(";")[0] : "";
+    if (!VIDEO_TYPES.includes(baseContentType)) {
+      return NextResponse.json(
+        { message: "Only MP4, MOV, and WebM videos are allowed" },
+        { status: 400 },
+      );
+    }
+    if (sizeBytes && sizeBytes > MAX_VIDEO_SIZE_BYTES) {
+      return NextResponse.json(
+        { message: "Video exceeds the 50 MB limit" },
+        { status: 400 },
+      );
+    }
+    const quota = await getReelQuotaStatus(session.user.id);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          message:
+            quota.maxPerMonth === 0
+              ? "Upgrade your plan to upload reels"
+              : "You've used this month's reel upload allowance",
+        },
+        { status: 403 },
+      );
+    }
+  } else {
+    const allowed = folder === "documents" ? DOCUMENT_TYPES : IMAGE_TYPES;
+    if (!allowed.includes(contentType)) {
+      return NextResponse.json(
+        {
+          message:
+            folder === "documents"
+              ? "Only JPEG, PNG, WebP, AVIF, TIFF, and PDF files are allowed"
+              : "Only JPEG, PNG, WebP, and AVIF images are allowed",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (sizeBytes && sizeBytes > MAX_SIZE_BYTES) {
+      return NextResponse.json(
+        { message: "File exceeds the 10 MB limit" },
+        { status: 400 },
+      );
+    }
   }
 
-  try {
-    const key = buildStorageKey(folder, session.user.id, filename);
-    const uploadUrl = await getPresignedUploadUrl(key, contentType, 300);
-    const publicUrl = getPublicUrl(key);
-    return NextResponse.json({ uploadUrl, publicUrl, key });
-  } catch (err) {
-    console.error("[upload] presign error:", err);
-    return NextResponse.json(
-      {
-        message: "Storage service error. Please try again or contact support.",
-      },
-      { status: 500 },
-    );
-  }
+  // Only sign the params the client actually sends back — Cloudinary requires
+  // every non-file param in the signature, in this exact set.
+  const timestamp = Math.round(Date.now() / 1000);
+  const uploadFolder = buildUploadFolder(folder, session.user.id);
+  const signature = signUploadParams({ timestamp, folder: uploadFolder });
+
+  return NextResponse.json({
+    timestamp,
+    signature,
+    folder: uploadFolder,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  });
 }

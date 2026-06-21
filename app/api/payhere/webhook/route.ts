@@ -26,6 +26,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Payment not successful" });
   }
 
+  // PayHere may redeliver the same notification on retry — make processing
+  // idempotent on payment_id so we never double-activate a subscription/boost.
+  const alreadyProcessed = await db.paymentTransaction.findFirst({
+    where: { gatewayRef: params.payment_id },
+  });
+  if (alreadyProcessed) {
+    return NextResponse.json({ message: "Already processed" });
+  }
+
   const orderId = params.order_id;
 
   // Parse order type from orderId prefix
@@ -101,7 +110,13 @@ export async function POST(req: NextRequest) {
     const parts = orderId.split("_");
     const listingId = parts[1];
 
-    const listing = await db.listing.findUnique({ where: { id: listingId } });
+    const alreadyBoosted = await db.listingBoost.findFirst({
+      where: { paymentRef: params.payment_id },
+    });
+
+    const listing = alreadyBoosted
+      ? null
+      : await db.listing.findUnique({ where: { id: listingId } });
     if (listing) {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 1); // default 1 day for webhook-confirmed boosts

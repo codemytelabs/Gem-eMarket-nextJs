@@ -15,6 +15,8 @@ async function main() {
       priceLkrAnnual: 0,
       maxListings: 3,
       maxReelsPerMonth: 0,
+      maxImagesPerListing: 3,
+      maxCertificationImages: 3,
       listingDurationDays: 30, // listings expire after 30 days
       hasShopProfile: false,
       hasAnalytics: false,
@@ -40,7 +42,9 @@ async function main() {
       priceUsdAnnual: 90,
       priceLkrAnnual: 29700,
       maxListings: 20,
-      maxReelsPerMonth: 2,
+      maxReelsPerMonth: 1,
+      maxImagesPerListing: 5,
+      maxCertificationImages: 5,
       listingDurationDays: 90, // listings expire after 90 days
       hasShopProfile: true,
       hasAnalytics: false,
@@ -67,6 +71,8 @@ async function main() {
       priceLkrAnnual: 82500,
       maxListings: null,
       maxReelsPerMonth: null,
+      maxImagesPerListing: 7,
+      maxCertificationImages: 5,
       listingDurationDays: 180, // listings expire after 180 days
       hasShopProfile: true,
       hasAnalytics: true,
@@ -93,6 +99,8 @@ async function main() {
       priceLkrAnnual: 198000,
       maxListings: null,
       maxReelsPerMonth: null,
+      maxImagesPerListing: 7,
+      maxCertificationImages: 5,
       listingDurationDays: null, // never expires
       hasShopProfile: true,
       hasAnalytics: true,

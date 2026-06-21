@@ -5,6 +5,13 @@ import { db } from "@/lib/db";
 import { createListingSchema } from "@/lib/validations/listing";
 import { getCached, setCached } from "@/lib/redis";
 import slugify from "@/lib/utils/slugify";
+import { getReelQuotaStatus } from "@/lib/reelQuota";
+import { flattenFieldErrors } from "@/lib/utils/zodErrors";
+import {
+  CATEGORY_IMAGE_MAX,
+  CERTIFICATION_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -72,7 +79,7 @@ export async function GET(req: NextRequest) {
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   };
 
-  await setCached(cacheKey, response, 60);
+  await setCached(cacheKey, response, 1800); // 30 minutes
   return NextResponse.json(response);
 }
 
@@ -86,7 +93,10 @@ export async function POST(req: NextRequest) {
   const parsed = createListingSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: parsed.error.issues[0].message },
+      {
+        message: parsed.error.issues[0].message,
+        fieldErrors: flattenFieldErrors(parsed.error),
+      },
       { status: 400 },
     );
   }
@@ -107,6 +117,42 @@ export async function POST(req: NextRequest) {
         {
           message: `Your ${plan.displayName} plan allows max ${plan.maxListings} active listings. Upgrade to add more.`,
         },
+        { status: 403 },
+      );
+    }
+  }
+
+  const imageLimit = getEffectiveLimit(
+    CATEGORY_IMAGE_MAX[parsed.data.category],
+    plan?.maxImagesPerListing ?? null,
+  );
+  if (parsed.data.images.length > imageLimit.max) {
+    return NextResponse.json(
+      {
+        message: `Your plan allows up to ${imageLimit.max} photos per listing. Upgrade for more.`,
+      },
+      { status: 403 },
+    );
+  }
+
+  const certLimit = getEffectiveLimit(
+    CERTIFICATION_IMAGE_MAX,
+    plan?.maxCertificationImages ?? null,
+  );
+  if ((parsed.data.certificationImages?.length ?? 0) > certLimit.max) {
+    return NextResponse.json(
+      {
+        message: `Your plan allows up to ${certLimit.max} certification documents. Upgrade for more.`,
+      },
+      { status: 403 },
+    );
+  }
+
+  if (parsed.data.reelUrl) {
+    const quota = await getReelQuotaStatus(session.user.id);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { message: "Your plan's reel upload allowance is used up." },
         { status: 403 },
       );
     }
@@ -151,6 +197,12 @@ export async function POST(req: NextRequest) {
       status: "PENDING_REVIEW",
     },
   });
+
+  if (listing.reelUrl) {
+    await db.reelUpload.create({
+      data: { sellerId: session.user.id, listingId: listing.id },
+    });
+  }
 
   return NextResponse.json(listing, { status: 201 });
 }

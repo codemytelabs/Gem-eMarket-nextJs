@@ -10,12 +10,18 @@ import {
   Toggle,
 } from "./shared/FormFields";
 import { ImageUploader } from "./shared/ImageUploader";
+import { ReelUploader } from "./shared/ReelUploader";
 import { CertificationUploader } from "./shared/CertificationUploader";
 import { LocationField } from "./shared/LocationField";
 import { PriceFields } from "./shared/PriceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
+import {
+  CATEGORY_IMAGE_MAX,
+  CERTIFICATION_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 interface GemFormProps {
   onBack: () => void;
@@ -23,6 +29,11 @@ interface GemFormProps {
   sellerLocation?: string;
   sellerCountry?: string;
   sellerPhone?: string;
+  canUploadReels: boolean;
+  reelsRemaining: number | null;
+  reelsMaxPerMonth: number | null;
+  planMaxImages: number | null;
+  planMaxCertificationImages: number | null;
 }
 
 export function GemForm({
@@ -31,8 +42,19 @@ export function GemForm({
   sellerLocation = "",
   sellerCountry = "LK",
   sellerPhone = "",
+  canUploadReels,
+  reelsRemaining,
+  reelsMaxPerMonth,
+  planMaxImages,
+  planMaxCertificationImages,
 }: GemFormProps) {
+  const imageLimit = getEffectiveLimit(CATEGORY_IMAGE_MAX.GEM, planMaxImages);
+  const certLimit = getEffectiveLimit(
+    CERTIFICATION_IMAGE_MAX,
+    planMaxCertificationImages,
+  );
   const [title, setTitle] = useState("");
+  const [reelUrl, setReelUrl] = useState("");
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
 
@@ -62,7 +84,7 @@ export function GemForm({
   const [contactPhone, setContactPhone] = useState(sellerPhone);
   const [hideContactPhone, setHideContactPhone] = useState(false);
 
-  const { submit, loading, error } = useCreateListing(onSuccess);
+  const { submit, loading, error, fieldErrors } = useCreateListing(onSuccess);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +98,7 @@ export function GemForm({
       title,
       description,
       images,
+      reelUrl: reelUrl || undefined,
       category: "GEM",
       gemType: gemType || undefined,
       caratWeight: caratWeight ? Number(caratWeight) : undefined,
@@ -101,7 +124,12 @@ export function GemForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <Field label="Listing Title" required>
+        <Field
+          label="Listing Title"
+          name="title"
+          required
+          error={fieldErrors.title}
+        >
           <TextInput
             placeholder="e.g., 3.5ct Unheated Blue Sapphire — Ratnapura"
             value={title}
@@ -110,7 +138,12 @@ export function GemForm({
           />
         </Field>
 
-        <Field label="Description" required>
+        <Field
+          label="Description"
+          name="description"
+          required
+          error={fieldErrors.description}
+        >
           <TextArea
             rows={4}
             placeholder="Describe the gem's quality, cut style, clarity, fluorescence, and any other notable features..."
@@ -124,8 +157,17 @@ export function GemForm({
       <ImageUploader
         images={images}
         onChange={setImages}
-        max={3}
+        max={imageLimit.max}
+        isPlanLimited={imageLimit.isPlanLimited}
         label="Gem Photos"
+      />
+
+      <ReelUploader
+        value={reelUrl}
+        onChange={setReelUrl}
+        canUpload={canUploadReels}
+        remaining={reelsRemaining}
+        maxPerMonth={reelsMaxPerMonth}
       />
 
       <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 space-y-4">
@@ -137,7 +179,12 @@ export function GemForm({
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Gem Type" required>
+          <Field
+            label="Gem Type"
+            name="gemType"
+            required
+            error={fieldErrors.gemType}
+          >
             <SelectInput
               value={gemType}
               onChange={(e) => setGemType(e.target.value)}
@@ -155,8 +202,10 @@ export function GemForm({
           {isLotSale ? (
             <Field
               label="Number of Stones"
+              name="lotSize"
               required
               hint="Total count in this parcel"
+              error={fieldErrors.lotSize}
             >
               <TextInput
                 type="number"
@@ -171,8 +220,10 @@ export function GemForm({
           ) : (
             <Field
               label="Total Carat Weight (ct)"
+              name="caratWeight"
               required
               hint="Combined weight if multiple; weight of single stone"
+              error={fieldErrors.caratWeight}
             >
               <TextInput
                 type="number"
@@ -190,7 +241,9 @@ export function GemForm({
         {isLotSale && (
           <Field
             label="Total Carat Weight (ct)"
+            name="caratWeight"
             hint="Combined carat weight of the whole parcel"
+            error={fieldErrors.caratWeight}
           >
             <TextInput
               type="number"
@@ -254,7 +307,9 @@ export function GemForm({
 
       <Field
         label="Origin of Gem"
+        name="gemOrigin"
         hint="Optional — country or region where the gem was mined"
+        error={fieldErrors.gemOrigin}
       >
         <TextInput
           placeholder="e.g., Sri Lanka, Madagascar, Colombia"
@@ -274,7 +329,11 @@ export function GemForm({
         cityPlaceholder="City / Region"
       />
 
-      <Field label="Treatment Status">
+      <Field
+        label="Treatment Status"
+        name="treatmentStatus"
+        error={fieldErrors.treatmentStatus}
+      >
         <SelectInput
           value={treatmentStatus}
           onChange={(e) => setTreatmentStatus(e.target.value)}
@@ -294,7 +353,11 @@ export function GemForm({
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Lab / Certification Body">
+          <Field
+            label="Lab / Certification Body"
+            name="certificationBody"
+            error={fieldErrors.certificationBody}
+          >
             <SelectInput
               value={certificationBody}
               onChange={(e) => setCertificationBody(e.target.value)}
@@ -310,7 +373,11 @@ export function GemForm({
 
           {certificationBody &&
             certificationBody !== CERTIFICATION_BODY.NONE && (
-              <Field label="Certificate Number">
+              <Field
+                label="Certificate Number"
+                name="certificationNumber"
+                error={fieldErrors.certificationNumber}
+              >
                 <TextInput
                   placeholder="e.g., 1234567890"
                   value={certificationNumber}
@@ -323,8 +390,10 @@ export function GemForm({
         <CertificationUploader
           images={certificationImages}
           onChange={setCertificationImages}
+          max={certLimit.max}
+          isPlanLimited={certLimit.isPlanLimited}
           label="Upload lab reports & certificates"
-          hint="Photos of GIA, AGL, GRS, or other lab reports. Max 5 images."
+          hint={`Photos of GIA, AGL, GRS, or other lab reports. Max ${certLimit.max} images.`}
         />
       </div>
 
@@ -349,7 +418,9 @@ export function GemForm({
 
         <Field
           label="Contact Phone"
+          name="contactPhone"
           hint="Buyers will see this number on the listing. Leave blank to use your profile number."
+          error={fieldErrors.contactPhone}
         >
           <TextInput
             type="tel"

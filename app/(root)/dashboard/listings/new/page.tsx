@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { NewListingWizard } from "./_components/NewListingWizard";
+import { getReelQuotaStatus } from "@/lib/reelQuota";
 
 export const metadata: Metadata = { title: "New Listing — Dashboard" };
 
@@ -12,15 +13,28 @@ export default async function NewListingPage() {
     redirect("/dashboard/listings");
   }
 
-  const seller = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      locationCity: true,
-      country: true,
-      phone: true,
-      whatsappNumber: true,
-    },
-  });
+  const [seller, reelQuota] = await Promise.all([
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        locationCity: true,
+        country: true,
+        phone: true,
+        whatsappNumber: true,
+        subscription: {
+          select: {
+            plan: {
+              select: {
+                maxImagesPerListing: true,
+                maxCertificationImages: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    getReelQuotaStatus(session.user.id),
+  ]);
 
   return (
     <div className="max-w-3xl">
@@ -38,6 +52,13 @@ export default async function NewListingPage() {
           sellerLocation={seller?.locationCity ?? ""}
           sellerCountry={seller?.country ?? "LK"}
           sellerPhone={seller?.phone ?? seller?.whatsappNumber ?? ""}
+          canUploadReels={reelQuota.allowed}
+          reelsRemaining={reelQuota.remaining}
+          reelsMaxPerMonth={reelQuota.maxPerMonth}
+          planMaxImages={seller?.subscription?.plan.maxImagesPerListing ?? null}
+          planMaxCertificationImages={
+            seller?.subscription?.plan.maxCertificationImages ?? null
+          }
         />
       </div>
     </div>
