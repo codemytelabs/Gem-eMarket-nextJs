@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   };
 
-  await setCached(cacheKey, response, 60);
+  await setCached(cacheKey, response, 1800); // 30 minutes
   return NextResponse.json(response);
 }
 

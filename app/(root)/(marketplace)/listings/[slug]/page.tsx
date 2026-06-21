@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShieldCheck, MapPin, MessageSquare, Clock, Globe } from "lucide-react";
 import EnquiryModal from "./_components/EnquiryModal";
+import { cldTransform } from "@/lib/cloudinary-url";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -125,9 +126,10 @@ export default async function ListingPage({ params }: Props) {
             <div className="aspect-square relative bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
               {listing.images[0] ? (
                 <Image
-                  src={listing.images[0]}
+                  src={cldTransform(listing.images[0], "f_auto,q_auto,w_1000")}
                   alt={listing.title}
                   fill
+                  unoptimized
                   className="object-cover"
                   priority
                 />
@@ -149,7 +151,13 @@ export default async function ListingPage({ params }: Props) {
                     key={i}
                     className="w-20 h-20 shrink-0 relative rounded-lg overflow-hidden bg-gray-100"
                   >
-                    <Image src={img} alt="" fill className="object-cover" />
+                    <Image
+                      src={cldTransform(img, "f_auto,q_auto,w_160")}
+                      alt=""
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
                   </div>
                 ))}
               </div>

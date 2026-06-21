@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ShieldCheck, Coins, MapPin, Scale } from "lucide-react";
+import { cldTransform } from "@/lib/cloudinary-url";
 
 interface MetalCardListing {
   id: string;
@@ -30,9 +31,10 @@ export function MetalCard({ listing }: { listing: MetalCardListing }) {
       <div className="aspect-square relative bg-gray-100 dark:bg-gray-800">
         {listing.images[0] ? (
           <Image
-            src={listing.images[0]}
+            src={cldTransform(listing.images[0], "f_auto,q_auto,w_400")}
             alt={listing.title}
             fill
+            unoptimized
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
