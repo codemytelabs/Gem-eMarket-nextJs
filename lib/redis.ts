@@ -36,6 +36,22 @@ export async function setCached<T>(
   await redis.set(key, value, { ex: ttlSeconds });
 }
 
-export async function invalidateCache(key: string): Promise<void> {
-  await redis.del(key);
+// Plain keys are deleted directly. Keys containing "*" are treated as a
+// pattern: DEL doesn't support globs, so matching keys are found via SCAN
+// first, then deleted.
+export async function invalidateCache(keyOrPattern: string): Promise<void> {
+  if (!keyOrPattern.includes("*")) {
+    await redis.del(keyOrPattern);
+    return;
+  }
+
+  let cursor = "0";
+  do {
+    const [nextCursor, keys] = await redis.scan(cursor, {
+      match: keyOrPattern,
+      count: 100,
+    });
+    if (keys.length > 0) await redis.del(...keys);
+    cursor = nextCursor;
+  } while (cursor !== "0");
 }

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
+import { getCached, setCached } from "@/lib/redis";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -23,6 +24,13 @@ import {
   MetalCard,
   ServiceCard,
 } from "@/components/cards";
+
+// The homepage's listings/shops/blog/metal-price data is identical for every
+// visitor, so it's cached in Redis rather than re-queried from Postgres on
+// every request. Session-dependent bits (the "Sell"/"Dashboard" CTA) are
+// read separately, outside the cache, so personalization still works.
+const HOMEPAGE_CACHE_KEY = "homepage:v1";
+const HOMEPAGE_CACHE_TTL_SECONDS = 60;
 
 export const metadata: Metadata = {
   title: "Lumevelo - Certified Gems, Fine Jewellery & Precious Metals",
@@ -64,15 +72,7 @@ const cardForCategory: Record<
   SERVICE: ServiceCard,
 };
 
-export default async function HomePage() {
-  const session = await auth();
-  const isSeller = session?.user?.role === "SELLER";
-  const sellHref = !session?.user
-    ? "/login?next=/seller-registration"
-    : isSeller
-      ? "/dashboard"
-      : "/seller-registration";
-
+async function fetchHomepageData() {
   const sellerInclude = {
     seller: {
       select: {
@@ -145,6 +145,55 @@ export default async function HomePage() {
     take: 8,
   });
 
+  return {
+    metalPrices,
+    featuredListings,
+    featuredShops,
+    blogPosts,
+    activeListingCount,
+    verifiedSellerCount,
+    newArrivals,
+  };
+}
+
+type HomepageData = Awaited<ReturnType<typeof fetchHomepageData>>;
+
+export default async function HomePage() {
+  const session = await auth();
+  const isSeller = session?.user?.role === "SELLER";
+  const sellHref = !session?.user
+    ? "/login?next=/seller-registration"
+    : isSeller
+      ? "/dashboard"
+      : "/seller-registration";
+
+  const cached = await getCached<HomepageData>(HOMEPAGE_CACHE_KEY);
+  const {
+    metalPrices,
+    featuredListings,
+    featuredShops,
+    blogPosts,
+    activeListingCount,
+    verifiedSellerCount,
+    newArrivals,
+  } = cached ?? (await fetchHomepageData());
+
+  if (!cached) {
+    await setCached(
+      HOMEPAGE_CACHE_KEY,
+      {
+        metalPrices,
+        featuredListings,
+        featuredShops,
+        blogPosts,
+        activeListingCount,
+        verifiedSellerCount,
+        newArrivals,
+      },
+      HOMEPAGE_CACHE_TTL_SECONDS,
+    );
+  }
+
   const servicesPreview =
     categories
       .find((c) => c.id === "services")
@@ -155,13 +204,15 @@ export default async function HomePage() {
     <div className="bg-gray-50 dark:bg-gray-950">
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary-dark to-primary">
-        <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 opacity-20 bg-primary-dark">
           <Image
             src="/images/categories/gems/other-gems.png"
             alt=""
             fill
+            sizes="100vw"
+            quality={40}
+            loading="eager"
             className="object-cover"
-            priority
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 md:py-28 text-center">
@@ -245,17 +296,20 @@ export default async function HomePage() {
           Shop by Category
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {categories.map((category) => (
+          {categories.map((category, i) => (
             <Link
               key={category.id}
               href={category.subcategories[0]?.href ?? "/"}
               className="group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all"
             >
-              <div className="aspect-square relative">
-                <img
+              <div className="aspect-square relative skeleton-shimmer">
+                <Image
                   src={category.image}
                   alt={category.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 20vw"
+                  priority={i === 0}
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
               <p className="text-center font-semibold text-sm py-3 text-gray-900 dark:text-white bg-white dark:bg-gray-900">
@@ -333,11 +387,13 @@ export default async function HomePage() {
                 href={service.href}
                 className="group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all"
               >
-                <div className="aspect-square relative">
-                  <img
+                <div className="aspect-square relative skeleton-shimmer">
+                  <Image
                     src={service.image}
                     alt={service.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
                 <p className="text-center font-medium text-sm py-3 text-gray-900 dark:text-white">

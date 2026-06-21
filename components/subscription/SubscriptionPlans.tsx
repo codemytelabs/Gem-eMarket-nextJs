@@ -129,12 +129,14 @@ export function SubscriptionPlans({
   currency,
   isSriLankanSeller,
   isLoggedIn,
+  currentPlanId,
 }: {
   plans: PlanData[];
   couponInfo: CouponInfo | null;
   currency: "usd" | "lkr";
   isSriLankanSeller: boolean;
   isLoggedIn: boolean;
+  currentPlanId?: string | null;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -291,6 +293,7 @@ export function SubscriptionPlans({
           const originalPrice = currency === "lkr" ? pricing.lkr : pricing.usd;
           const isFree = displayPrice === 0 && pricing.usd > 0;
           const isRecommended = plan.id === recommendedPlanId;
+          const isCurrent = !!currentPlanId && plan.id === currentPlanId;
 
           // Coupon usable on the (monthly-only) checkout flow regardless of which cycle is being previewed
           const couponUsableAtCheckout =
@@ -303,7 +306,7 @@ export function SubscriptionPlans({
           const upgradeHref = `/dashboard/upgrade?${upgradeParams.toString()}`;
 
           const handleSelect = () => {
-            if (plan.name === "free") return;
+            if (plan.name === "free" || isCurrent) return;
             router.push(upgradeHref);
           };
 
@@ -312,17 +315,25 @@ export function SubscriptionPlans({
               key={plan.id}
               onClick={handleSelect}
               className={`relative rounded-xl p-5 bg-white dark:bg-gray-900 border transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg ${
-                plan.name !== "free" ? "cursor-pointer" : ""
+                plan.name !== "free" && !isCurrent ? "cursor-pointer" : ""
               } ${
-                isRecommended
-                  ? "border-blue-600 dark:border-blue-500 ring-2 ring-blue-600/20"
-                  : "border-gray-200 dark:border-gray-800"
+                isCurrent
+                  ? "border-green-600 dark:border-green-500 ring-2 ring-green-600/20"
+                  : isRecommended
+                    ? "border-blue-600 dark:border-blue-500 ring-2 ring-blue-600/20"
+                    : "border-gray-200 dark:border-gray-800"
               }`}
             >
-              {isRecommended && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full">
-                  Recommended
+              {isCurrent ? (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-green-600 text-white text-xs font-bold rounded-full">
+                  Current Plan
                 </div>
+              ) : (
+                isRecommended && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-blue-600 text-white text-xs font-bold rounded-full">
+                    Recommended
+                  </div>
+                )
               )}
 
               <div className="flex items-center gap-2 mb-3">
@@ -393,7 +404,15 @@ export function SubscriptionPlans({
               </ul>
 
               <div className="mt-5">
-                {plan.name === "free" ? (
+                {isCurrent ? (
+                  <button
+                    disabled
+                    className="flex items-center justify-center gap-1.5 w-full py-2.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-semibold rounded-lg cursor-default"
+                  >
+                    <Check className="w-4 h-4" />
+                    Current Plan
+                  </button>
+                ) : plan.name === "free" ? (
                   <Link
                     href={isLoggedIn ? "/dashboard" : "/register"}
                     onClick={(e) => e.stopPropagation()}

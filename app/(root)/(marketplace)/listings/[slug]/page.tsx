@@ -6,6 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShieldCheck, MapPin, MessageSquare, Clock, Globe } from "lucide-react";
 import EnquiryModal from "./_components/EnquiryModal";
+import { ListingGallery } from "@/components/listings/ListingGallery";
+import { safeJsonLd } from "@/lib/utils/json-ld";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -115,45 +117,19 @@ export default async function ListingPage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Images */}
-          <div className="lg:col-span-3 space-y-3">
-            <div className="aspect-square relative bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
-              {listing.images[0] ? (
-                <Image
-                  src={listing.images[0]}
-                  alt={listing.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                  No image
-                </div>
-              )}
-              {listing.isBoosted && (
-                <div className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                  Featured
-                </div>
-              )}
-            </div>
-            {listing.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto">
-                {listing.images.slice(1).map((img, i) => (
-                  <div
-                    key={i}
-                    className="w-20 h-20 shrink-0 relative rounded-lg overflow-hidden bg-gray-100"
-                  >
-                    <Image src={img} alt="" fill className="object-cover" />
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="lg:col-span-3">
+            <ListingGallery
+              images={listing.images}
+              reelUrl={listing.reelUrl}
+              title={listing.title}
+              isBoosted={listing.isBoosted}
+            />
           </div>
 
           {/* Details */}
@@ -192,6 +168,7 @@ export default async function ListingPage({ params }: Props) {
                           src={src}
                           alt={`Certificate ${i + 1}`}
                           fill
+                          sizes="80px"
                           className="object-cover"
                         />
                       </div>

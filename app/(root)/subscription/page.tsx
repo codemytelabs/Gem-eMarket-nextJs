@@ -29,12 +29,22 @@ export default async function SubscriptionPage({ searchParams }: Props) {
 
   const session = await auth();
   let isSriLankanSeller = false;
+  let currentSubscriptionPlanId: string | null = null;
   if (session?.user?.id) {
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { locationCity: true },
-    });
+    const [user, subscription] = await Promise.all([
+      db.user.findUnique({
+        where: { id: session.user.id },
+        select: { locationCity: true },
+      }),
+      session.user.role === "SELLER"
+        ? db.sellerSubscription.findUnique({
+            where: { sellerId: session.user.id },
+            select: { planId: true },
+          })
+        : null,
+    ]);
     isSriLankanSeller = !!user?.locationCity;
+    currentSubscriptionPlanId = subscription?.planId ?? null;
   }
   const currency: "usd" | "lkr" =
     price === "lkr" && isSriLankanSeller ? "lkr" : "usd";
@@ -43,6 +53,14 @@ export default async function SubscriptionPage({ searchParams }: Props) {
     where: { isActive: true },
     orderBy: { sortOrder: "asc" },
   });
+
+  // No SellerSubscription row means they're implicitly on the free plan
+  const currentPlanId =
+    session?.user?.role === "SELLER"
+      ? (currentSubscriptionPlanId ??
+        plans.find((p) => p.name === "free")?.id ??
+        null)
+      : null;
 
   let couponInfo: CouponInfo | null = null;
   let couponForDiscount: CouponForDiscount | null = null;
@@ -170,6 +188,7 @@ export default async function SubscriptionPage({ searchParams }: Props) {
           currency={currency}
           isSriLankanSeller={isSriLankanSeller}
           isLoggedIn={!!session}
+          currentPlanId={currentPlanId}
         />
       </div>
     </div>

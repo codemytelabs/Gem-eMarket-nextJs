@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { escapeHtml } from "@/lib/utils/escape-html";
 
 // Runs daily via cron-job.org
 // Protected by x-cron-secret header
@@ -77,8 +78,8 @@ export async function GET(req: NextRequest) {
           subject: "Your GemCeylon subscription has expired",
           html: `
             <h2>Subscription Expired</h2>
-            <p>Hi ${sub.seller.name},</p>
-            <p>Your <strong>${sub.plan.name}</strong> plan has expired and your account has been moved to the Free plan.</p>
+            <p>Hi ${escapeHtml(sub.seller.name)},</p>
+            <p>Your <strong>${escapeHtml(sub.plan.name)}</strong> plan has expired and your account has been moved to the Free plan.</p>
             <p>To restore your listings and features, please renew your subscription.</p>
             <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/upgrade"
                style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">
@@ -125,8 +126,8 @@ export async function GET(req: NextRequest) {
         subject: `Your GemCeylon ${sub.plan.displayName} plan expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
         html: `
           <h2>Subscription Renewal Reminder</h2>
-          <p>Hi ${sub.seller.name},</p>
-          <p>Your <strong>${sub.plan.displayName}</strong> plan expires in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong>.</p>
+          <p>Hi ${escapeHtml(sub.seller.name)},</p>
+          <p>Your <strong>${escapeHtml(sub.plan.displayName)}</strong> plan expires in <strong>${daysLeft} day${daysLeft !== 1 ? "s" : ""}</strong>.</p>
           <p>Renew now to keep your listings active and avoid interruption.</p>
           <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/upgrade"
              style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">

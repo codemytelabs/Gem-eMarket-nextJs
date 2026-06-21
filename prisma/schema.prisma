@@ -54,6 +54,7 @@ model User {
   socialShareQueue       SocialShareQueue[]
   whatsappBroadcastOptIns WhatsappBroadcastOptIn[] @relation("SellerOptIns")
   whatsappBroadcastSubs  WhatsappBroadcastOptIn[] @relation("BuyerOptIns")
+  reelUploads             ReelUpload[]
 
   @@map("users")
 }
@@ -76,6 +77,8 @@ model SubscriptionPlan {
   priceLkrAnnual         Decimal? @db.Decimal(10, 2) // null = fall back to priceLkr * 12
   maxListings            Int?     // null = unlimited
   maxReelsPerMonth       Int?     // null = unlimited
+  maxImagesPerListing    Int?     // null = unlimited
+  maxCertificationImages Int?     // null = unlimited
   hasShopProfile         Boolean  @default(false)
   hasAnalytics           Boolean  @default(false)
   hasRealtimeAlerts      Boolean  @default(false)
@@ -193,6 +196,7 @@ model Listing {
   price               Decimal       @db.Decimal(12, 2)
   currency            String        @default("USD")
   images              String[]
+  reelUrl             String?
   category            ListingCategory
   gemType             String?
   gemOrigin           String?       @default("Sri Lanka")
@@ -226,6 +230,7 @@ model Listing {
   turnaroundTime      String?
   // Status
   status              ListingStatus @default(ACTIVE)
+  rejectionReason     String?       @db.Text
   isWholesale         Boolean       @default(false)
   // Boost
   isBoosted           Boolean       @default(false)
@@ -241,12 +246,27 @@ model Listing {
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 
-  seller    User           @relation(fields: [sellerId], references: [id])
-  enquiries Enquiry[]
-  boosts    ListingBoost[]
-  analytics ListingView[]
+  seller      User           @relation(fields: [sellerId], references: [id])
+  enquiries   Enquiry[]
+  boosts      ListingBoost[]
+  analytics   ListingView[]
+  reelUploads ReelUpload[]
 
   @@map("listings")
+}
+
+// ─── Reel Uploads (monthly quota log) ─────────────────────────────────────────
+
+model ReelUpload {
+  id        String   @id @default(cuid())
+  sellerId  String
+  listingId String?
+  createdAt DateTime @default(now())
+
+  seller  User     @relation(fields: [sellerId], references: [id])
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@map("reel_uploads")
 }
 
 enum ListingCategory {
@@ -262,6 +282,7 @@ enum ListingStatus {
   PAUSED
   EXPIRED
   PENDING_REVIEW
+  CHANGES_REQUESTED
   REJECTED
 }
 

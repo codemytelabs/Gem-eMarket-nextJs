@@ -4,12 +4,17 @@ import { useState } from "react";
 import { SERVICE_TYPE, PRICING_TYPE } from "@/types/enums";
 import { Field, TextInput, TextArea, SelectInput } from "./shared/FormFields";
 import { ImageUploader } from "./shared/ImageUploader";
+import { ReelUploader } from "./shared/ReelUploader";
 import { LocationField } from "./shared/LocationField";
 import { PriceFields } from "./shared/PriceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
 import { X } from "lucide-react";
+import {
+  CATEGORY_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 const WORLDWIDE = "Worldwide";
 
@@ -19,6 +24,11 @@ interface ServiceFormProps {
   sellerLocation?: string;
   sellerCountry?: string;
   sellerPhone?: string;
+  canUploadReels: boolean;
+  reelsRemaining: number | null;
+  reelsMaxPerMonth: number | null;
+  planMaxImages: number | null;
+  planMaxCertificationImages: number | null;
 }
 
 export function ServiceForm({
@@ -26,10 +36,19 @@ export function ServiceForm({
   onSuccess,
   sellerLocation = "",
   sellerCountry = "LK",
+  canUploadReels,
+  reelsRemaining,
+  reelsMaxPerMonth,
+  planMaxImages,
 }: ServiceFormProps) {
+  const imageLimit = getEffectiveLimit(
+    CATEGORY_IMAGE_MAX.SERVICE,
+    planMaxImages,
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [reelUrl, setReelUrl] = useState("");
   const [serviceType, setServiceType] = useState("");
   const [pricingType, setPricingType] = useState(PRICING_TYPE.FIXED);
   const [price, setPrice] = useState("");
@@ -41,7 +60,7 @@ export function ServiceForm({
   const [areaInput, setAreaInput] = useState("");
   const [serviceAreas, setServiceAreas] = useState<string[]>([]);
 
-  const { submit, loading, error } = useCreateListing(onSuccess);
+  const { submit, loading, error, fieldErrors } = useCreateListing(onSuccess);
 
   const addArea = () => {
     const trimmed = areaInput.trim();
@@ -77,6 +96,7 @@ export function ServiceForm({
       title,
       description,
       images,
+      reelUrl: reelUrl || undefined,
       category: "SERVICE",
       serviceType: serviceType || undefined,
       pricingType,
@@ -91,7 +111,12 @@ export function ServiceForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <Field label="Service Title" required>
+      <Field
+        label="Service Title"
+        name="title"
+        required
+        error={fieldErrors.title}
+      >
         <TextInput
           placeholder="e.g., Professional Gem Cutting & Polishing"
           value={title}
@@ -100,7 +125,12 @@ export function ServiceForm({
         />
       </Field>
 
-      <Field label="Description" required>
+      <Field
+        label="Description"
+        name="description"
+        required
+        error={fieldErrors.description}
+      >
         <TextArea
           rows={4}
           placeholder="Describe your service, experience, equipment, and what clients can expect..."
@@ -113,12 +143,26 @@ export function ServiceForm({
       <ImageUploader
         images={images}
         onChange={setImages}
-        max={6}
+        max={imageLimit.max}
+        isPlanLimited={imageLimit.isPlanLimited}
         label="Portfolio / Sample Photos"
       />
 
+      <ReelUploader
+        value={reelUrl}
+        onChange={setReelUrl}
+        canUpload={canUploadReels}
+        remaining={reelsRemaining}
+        maxPerMonth={reelsMaxPerMonth}
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Service Type" required>
+        <Field
+          label="Service Type"
+          name="serviceType"
+          required
+          error={fieldErrors.serviceType}
+        >
           <SelectInput
             value={serviceType}
             onChange={(e) => setServiceType(e.target.value)}
@@ -133,7 +177,12 @@ export function ServiceForm({
           </SelectInput>
         </Field>
 
-        <Field label="Pricing Type" required>
+        <Field
+          label="Pricing Type"
+          name="pricingType"
+          required
+          error={fieldErrors.pricingType}
+        >
           <SelectInput
             value={pricingType}
             onChange={(e) => setPricingType(e.target.value as PRICING_TYPE)}
@@ -158,7 +207,9 @@ export function ServiceForm({
 
       <Field
         label="Typical Turnaround Time"
+        name="turnaroundTime"
         hint="Optional — give buyers an idea of lead time"
+        error={fieldErrors.turnaroundTime}
       >
         <TextInput
           placeholder="e.g., 2–5 business days"

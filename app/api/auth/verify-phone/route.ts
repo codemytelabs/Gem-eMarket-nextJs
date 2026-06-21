@@ -3,9 +3,10 @@ import { auth } from "@/auth";
 import { verifyOtpToken } from "@/lib/firebase-admin";
 import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/redis";
+import { getClientIp } from "@/lib/utils/client-ip";
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const ip = getClientIp(req);
   const { allowed } = await rateLimit(`otp:${ip}`, 10, 3600);
   if (!allowed) {
     return NextResponse.json({ message: "Too many requests" }, { status: 429 });

@@ -21,12 +21,22 @@ interface NewListingWizardProps {
   sellerLocation?: string;
   sellerCountry?: string;
   sellerPhone?: string;
+  canUploadReels: boolean;
+  reelsRemaining: number | null;
+  reelsMaxPerMonth: number | null;
+  planMaxImages: number | null;
+  planMaxCertificationImages: number | null;
 }
 
 export function NewListingWizard({
   sellerLocation = "",
   sellerCountry = "LK",
   sellerPhone = "",
+  canUploadReels,
+  reelsRemaining,
+  reelsMaxPerMonth,
+  planMaxImages,
+  planMaxCertificationImages,
 }: NewListingWizardProps) {
   const router = useRouter();
   const [category, setCategory] = useState<LISTING_CATEGORY | null>(null);
@@ -43,6 +53,11 @@ export function NewListingWizard({
     sellerLocation,
     sellerCountry,
     sellerPhone,
+    canUploadReels,
+    reelsRemaining,
+    reelsMaxPerMonth,
+    planMaxImages,
+    planMaxCertificationImages,
   };
 
   return (

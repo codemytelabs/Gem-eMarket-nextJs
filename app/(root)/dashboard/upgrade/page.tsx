@@ -29,6 +29,7 @@ const PLAN_BADGE: Record<string, string> = {
 function UpgradePageContent() {
   const searchParams = useSearchParams();
   const [plans, setPlans] = useState<ISubscriptionPlan[]>([]);
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<ISubscriptionPlan | null>(
     null,
   );
@@ -50,6 +51,19 @@ function UpgradePageContent() {
       .then((r) => r.json())
       .then(setPlans);
   }, []);
+
+  // Always read fresh from the DB — session.user.planName is cached at
+  // sign-in and goes stale if the plan changes server-side (e.g. an admin
+  // override), so it can't be trusted here.
+  useEffect(() => {
+    fetch("/api/subscriptions")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => setCurrentPlanId(data?.subscription?.planId ?? null))
+      .catch(() => setCurrentPlanId(null));
+  }, []);
+
+  const resolvedCurrentPlanId =
+    currentPlanId ?? plans.find((p) => p.name === "free")?.id ?? null;
 
   const validateCoupon = useCallback(
     async (planOverride?: ISubscriptionPlan, codeOverride?: string) => {
@@ -81,7 +95,9 @@ function UpgradePageContent() {
     const coupon = searchParams.get("couponCode");
 
     const plan = planId
-      ? plans.find((p) => p.id === planId && p.name !== "free")
+      ? plans.find(
+          (p) => p.id === planId && p.name !== "free" && p.id !== currentPlanId,
+        )
       : undefined;
     if (plan) setSelectedPlan(plan);
 
@@ -90,7 +106,7 @@ function UpgradePageContent() {
       setCouponCode(code);
       if (plan) validateCoupon(plan, code);
     }
-  }, [plans, prefilled, searchParams, validateCoupon]);
+  }, [plans, prefilled, searchParams, validateCoupon, currentPlanId]);
 
   const handleUpgrade = useCallback(async () => {
     if (!selectedPlan) return;
@@ -188,24 +204,37 @@ function UpgradePageContent() {
         {plans.map((plan) => {
           const Icon = PLAN_ICONS[plan.name];
           const isSelected = selectedPlan?.id === plan.id;
+          const isCurrent = plan.id === resolvedCurrentPlanId;
           const { usd, lkr } = getDisplayPrice(plan);
 
           return (
             <div
               key={plan.id}
-              onClick={() => plan.name !== "free" && setSelectedPlan(plan)}
-              className={`relative border-2 rounded-xl p-5 cursor-pointer transition-all ${
-                plan.name === "free"
-                  ? "cursor-default opacity-60"
-                  : isSelected
-                    ? `${PLAN_COLORS[plan.name]} bg-white dark:bg-gray-900 shadow-lg scale-[1.01]`
-                    : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700"
+              onClick={() =>
+                plan.name !== "free" && !isCurrent && setSelectedPlan(plan)
+              }
+              className={`relative border-2 rounded-xl p-5 transition-all ${
+                isCurrent
+                  ? "cursor-default border-green-500 bg-white dark:bg-gray-900"
+                  : plan.name === "free"
+                    ? "cursor-default opacity-60 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                    : `cursor-pointer ${
+                        isSelected
+                          ? `${PLAN_COLORS[plan.name]} bg-white dark:bg-gray-900 shadow-lg scale-[1.01]`
+                          : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700"
+                      }`
               }`}
             >
-              {plan.name === "pro" && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-purple-600 text-white text-xs font-bold rounded-full">
-                  Most Popular
+              {isCurrent ? (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-green-600 text-white text-xs font-bold rounded-full">
+                  Current Plan
                 </div>
+              ) : (
+                plan.name === "pro" && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-purple-600 text-white text-xs font-bold rounded-full">
+                    Most Popular
+                  </div>
+                )
               )}
 
               <div className="flex items-center gap-2 mb-3">
@@ -331,12 +360,20 @@ function UpgradePageContent() {
                   ))}
               </ul>
 
-              {isSelected && (
+              {isCurrent ? (
                 <div className="mt-4 text-center">
-                  <span className="text-xs font-semibold text-blue-600">
-                    Selected ✓
+                  <span className="text-xs font-semibold text-green-600">
+                    Your current plan
                   </span>
                 </div>
+              ) : (
+                isSelected && (
+                  <div className="mt-4 text-center">
+                    <span className="text-xs font-semibold text-blue-600">
+                      Selected ✓
+                    </span>
+                  </div>
+                )
               )}
             </div>
           );

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ChevronDown } from "lucide-react";
 
 export const inputClass =
   "w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60";
@@ -12,17 +13,42 @@ interface FieldProps {
   label: string;
   required?: boolean;
   hint?: string;
+  name?: string;
+  error?: string;
   children: React.ReactNode;
 }
 
-export function Field({ label, required, hint, children }: FieldProps) {
+export function Field({
+  label,
+  required,
+  hint,
+  name,
+  error,
+  children,
+}: FieldProps) {
+  const content =
+    error && React.isValidElement<{ className?: string }>(children)
+      ? React.cloneElement(children, {
+          className: [
+            children.props.className ?? "",
+            "border-red-500 focus:ring-red-500",
+          ]
+            .filter(Boolean)
+            .join(" "),
+        })
+      : children;
+
   return (
-    <div>
+    <div id={name ? `field-${name}` : undefined}>
       <label className={labelClass}>
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      {children}
-      {hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+      {content}
+      {error ? (
+        <p className="mt-1 text-xs text-red-500">{error}</p>
+      ) : (
+        hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>
+      )}
     </div>
   );
 }
@@ -45,7 +71,15 @@ export function SelectInput(
   props: React.SelectHTMLAttributes<HTMLSelectElement>,
 ) {
   const { className = "", ...rest } = props;
-  return <select className={`${inputClass} ${className}`} {...rest} />;
+  return (
+    <div className="relative">
+      <select
+        className={`${inputClass} appearance-none pr-9 ${className}`}
+        {...rest}
+      />
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+    </div>
+  );
 }
 
 export function Toggle({
