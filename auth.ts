@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { authConfig } from "@/auth.config";
+import { rateLimit } from "@/lib/redis";
+import { getClientIp } from "@/lib/utils/client-ip";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -17,9 +19,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   providers: [
     Credentials({
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
+
+        const ip = getClientIp(req);
+        const { allowed } = await rateLimit(`login:${ip}`, 10, 900);
+        if (!allowed) {
+          throw new Error("Too many login attempts. Try again later.");
+        }
 
         const user = await db.user.findUnique({
           where: { email: parsed.data.email },

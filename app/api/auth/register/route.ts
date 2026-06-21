@@ -3,9 +3,10 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validations/auth";
 import { rateLimit } from "@/lib/redis";
+import { getClientIp } from "@/lib/utils/client-ip";
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const ip = getClientIp(req);
   const { allowed } = await rateLimit(`register:${ip}`, 5, 3600);
   if (!allowed) {
     return NextResponse.json({ message: "Too many requests" }, { status: 429 });

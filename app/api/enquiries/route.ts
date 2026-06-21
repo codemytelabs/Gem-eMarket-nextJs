@@ -5,9 +5,10 @@ import { enquirySchema } from "@/lib/validations/subscription";
 import { rateLimit } from "@/lib/redis";
 import { sendEnquiryNotification } from "@/lib/email";
 import { verifyOtpToken } from "@/lib/firebase-admin";
+import { getClientIp } from "@/lib/utils/client-ip";
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const ip = getClientIp(req);
 
   // Rate limit: 10 enquiries per IP per 24h
   const { allowed } = await rateLimit(`enquiry:${ip}`, 10, 86400);

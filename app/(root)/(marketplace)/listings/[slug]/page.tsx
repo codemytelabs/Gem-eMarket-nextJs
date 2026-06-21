@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ShieldCheck, MapPin, MessageSquare, Clock, Globe } from "lucide-react";
 import EnquiryModal from "./_components/EnquiryModal";
 import { ListingGallery } from "@/components/listings/ListingGallery";
+import { safeJsonLd } from "@/lib/utils/json-ld";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -116,7 +117,7 @@ export default async function ListingPage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">

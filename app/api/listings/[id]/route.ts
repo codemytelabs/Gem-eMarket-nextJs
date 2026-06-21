@@ -6,6 +6,7 @@ import { invalidateCache } from "@/lib/redis";
 import { deleteAsset } from "@/lib/cloudinary";
 import { getReelQuotaStatus } from "@/lib/reelQuota";
 import { flattenFieldErrors } from "@/lib/utils/zodErrors";
+import { getClientIp } from "@/lib/utils/client-ip";
 
 export async function GET(
   req: NextRequest,
@@ -40,7 +41,7 @@ export async function GET(
   }
 
   // Track view asynchronously (fire and forget)
-  const ip = req.headers.get("x-forwarded-for") ?? undefined;
+  const ip = getClientIp(req);
   db.listingView
     .create({ data: { listingId: listing.id, viewerIp: ip } })
     .catch(() => {});
