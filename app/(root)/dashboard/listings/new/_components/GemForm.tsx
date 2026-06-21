@@ -17,6 +17,11 @@ import { PriceFields } from "./shared/PriceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
+import {
+  CATEGORY_IMAGE_MAX,
+  CERTIFICATION_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 interface GemFormProps {
   onBack: () => void;
@@ -27,6 +32,8 @@ interface GemFormProps {
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
+  planMaxImages: number | null;
+  planMaxCertificationImages: number | null;
 }
 
 export function GemForm({
@@ -38,7 +45,14 @@ export function GemForm({
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
+  planMaxImages,
+  planMaxCertificationImages,
 }: GemFormProps) {
+  const imageLimit = getEffectiveLimit(CATEGORY_IMAGE_MAX.GEM, planMaxImages);
+  const certLimit = getEffectiveLimit(
+    CERTIFICATION_IMAGE_MAX,
+    planMaxCertificationImages,
+  );
   const [title, setTitle] = useState("");
   const [reelUrl, setReelUrl] = useState("");
   const [description, setDescription] = useState("");
@@ -143,7 +157,8 @@ export function GemForm({
       <ImageUploader
         images={images}
         onChange={setImages}
-        max={3}
+        max={imageLimit.max}
+        isPlanLimited={imageLimit.isPlanLimited}
         label="Gem Photos"
       />
 
@@ -375,8 +390,10 @@ export function GemForm({
         <CertificationUploader
           images={certificationImages}
           onChange={setCertificationImages}
+          max={certLimit.max}
+          isPlanLimited={certLimit.isPlanLimited}
           label="Upload lab reports & certificates"
-          hint="Photos of GIA, AGL, GRS, or other lab reports. Max 5 images."
+          hint={`Photos of GIA, AGL, GRS, or other lab reports. Max ${certLimit.max} images.`}
         />
       </div>
 

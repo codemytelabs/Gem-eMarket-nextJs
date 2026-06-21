@@ -77,6 +77,8 @@ model SubscriptionPlan {
   priceLkrAnnual         Decimal? @db.Decimal(10, 2) // null = fall back to priceLkr * 12
   maxListings            Int?     // null = unlimited
   maxReelsPerMonth       Int?     // null = unlimited
+  maxImagesPerListing    Int?     // null = unlimited
+  maxCertificationImages Int?     // null = unlimited
   hasShopProfile         Boolean  @default(false)
   hasAnalytics           Boolean  @default(false)
   hasRealtimeAlerts      Boolean  @default(false)

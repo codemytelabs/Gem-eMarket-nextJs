@@ -17,6 +17,11 @@ import { PriceFields } from "./shared/PriceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
+import {
+  CATEGORY_IMAGE_MAX,
+  CERTIFICATION_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 const SOVEREIGN_TO_GRAMS = 7.9881;
 
@@ -28,6 +33,8 @@ interface MetalFormProps {
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
+  planMaxImages: number | null;
+  planMaxCertificationImages: number | null;
 }
 
 export function MetalForm({
@@ -38,7 +45,17 @@ export function MetalForm({
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
+  planMaxImages,
+  planMaxCertificationImages,
 }: MetalFormProps) {
+  const imageLimit = getEffectiveLimit(
+    CATEGORY_IMAGE_MAX.PRECIOUS_METAL,
+    planMaxImages,
+  );
+  const certLimit = getEffectiveLimit(
+    CERTIFICATION_IMAGE_MAX,
+    planMaxCertificationImages,
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -140,7 +157,8 @@ export function MetalForm({
       <ImageUploader
         images={images}
         onChange={setImages}
-        max={3}
+        max={imageLimit.max}
+        isPlanLimited={imageLimit.isPlanLimited}
         label="Photos"
       />
 
@@ -288,8 +306,10 @@ export function MetalForm({
         <CertificationUploader
           images={certificationImages}
           onChange={setCertificationImages}
+          max={certLimit.max}
+          isPlanLimited={certLimit.isPlanLimited}
           label="Hallmark / assay documents (optional)"
-          hint="Upload photos of hallmark stamps or assay certificates."
+          hint={`Upload photos of hallmark stamps or assay certificates. Max ${certLimit.max} images.`}
         />
       </div>
 

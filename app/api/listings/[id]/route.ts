@@ -7,6 +7,11 @@ import { deleteAsset } from "@/lib/cloudinary";
 import { getReelQuotaStatus } from "@/lib/reelQuota";
 import { flattenFieldErrors } from "@/lib/utils/zodErrors";
 import { getClientIp } from "@/lib/utils/client-ip";
+import {
+  CATEGORY_IMAGE_MAX,
+  CERTIFICATION_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 export async function GET(
   req: NextRequest,
@@ -106,6 +111,49 @@ export async function PUT(
         { message: "Your plan's reel upload allowance is used up." },
         { status: 403 },
       );
+    }
+  }
+
+  if (
+    !isAdmin &&
+    (parsed.data.images !== undefined ||
+      parsed.data.certificationImages !== undefined)
+  ) {
+    const subscription = await db.sellerSubscription.findUnique({
+      where: { sellerId: existing.sellerId },
+      include: { plan: true },
+    });
+    const plan = subscription?.plan;
+    const category = parsed.data.category ?? existing.category;
+
+    if (parsed.data.images !== undefined) {
+      const imageLimit = getEffectiveLimit(
+        CATEGORY_IMAGE_MAX[category],
+        plan?.maxImagesPerListing ?? null,
+      );
+      if (parsed.data.images.length > imageLimit.max) {
+        return NextResponse.json(
+          {
+            message: `Your plan allows up to ${imageLimit.max} photos per listing. Upgrade for more.`,
+          },
+          { status: 403 },
+        );
+      }
+    }
+
+    if (parsed.data.certificationImages !== undefined) {
+      const certLimit = getEffectiveLimit(
+        CERTIFICATION_IMAGE_MAX,
+        plan?.maxCertificationImages ?? null,
+      );
+      if (parsed.data.certificationImages.length > certLimit.max) {
+        return NextResponse.json(
+          {
+            message: `Your plan allows up to ${certLimit.max} certification documents. Upgrade for more.`,
+          },
+          { status: 403 },
+        );
+      }
     }
   }
 

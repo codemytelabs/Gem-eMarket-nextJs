@@ -302,7 +302,7 @@ export default async function HomePage() {
               href={category.subcategories[0]?.href ?? "/"}
               className="group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all"
             >
-              <div className="aspect-square relative bg-gray-200 dark:bg-gray-800">
+              <div className="aspect-square relative skeleton-shimmer">
                 <Image
                   src={category.image}
                   alt={category.name}
@@ -387,7 +387,7 @@ export default async function HomePage() {
                 href={service.href}
                 className="group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all"
               >
-                <div className="aspect-square relative bg-gray-200 dark:bg-gray-800">
+                <div className="aspect-square relative skeleton-shimmer">
                   <Image
                     src={service.image}
                     alt={service.name}

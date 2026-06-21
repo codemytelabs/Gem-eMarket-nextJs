@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, X, Loader2, FileCheck, FileText } from "lucide-react";
+import Link from "next/link";
+import {
+  Upload,
+  X,
+  Loader2,
+  FileCheck,
+  FileText,
+  Sparkles,
+} from "lucide-react";
 import { uploadImage } from "./uploadImage";
 import { labelClass } from "./FormFields";
 
@@ -14,6 +22,8 @@ interface CertificationUploaderProps {
   max?: number;
   label?: string;
   hint?: string;
+  isPlanLimited?: boolean;
+  upgradeHref?: string;
 }
 
 function isPdf(url: string) {
@@ -29,6 +39,8 @@ export function CertificationUploader({
   max = 5,
   label = "Certification documents (optional)",
   hint = "Upload photos of lab reports, hallmark stamps, assay certificates, or PDF documents.",
+  isPlanLimited = false,
+  upgradeHref = "/dashboard/upgrade",
 }: CertificationUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -143,6 +155,19 @@ export function CertificationUploader({
 
       {hint && <p className="mt-1.5 text-xs text-gray-400">{hint}</p>}
       {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
+      {!error && isPlanLimited && images.length >= max && (
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+          <Sparkles className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+          Want to upload more documents?{" "}
+          <Link
+            href={upgradeHref}
+            className="font-medium text-primary hover:underline"
+          >
+            Upgrade your plan
+          </Link>{" "}
+          for more uploads.
+        </p>
+      )}
     </div>
   );
 }
