@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { cldTransform } from "@/lib/cloudinary-url";
 
@@ -24,18 +24,34 @@ export function ListingGallery({
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const selected = media[selectedIndex];
+  const mainVideoRef = useRef<HTMLVideoElement>(null);
+  const thumbVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Clicking a thumbnail to select it is itself a deliberate "watch this"
+  // action, so the main viewer starts playing immediately on selection —
+  // hover/native controls still take over from there.
+  useEffect(() => {
+    if (selected?.type === "video") {
+      mainVideoRef.current?.play();
+    }
+  }, [selectedIndex, selected?.type]);
 
   return (
     <div className="space-y-3">
-      <div className="aspect-square relative bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
+      <div
+        className="aspect-square relative bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden"
+        onMouseEnter={() => mainVideoRef.current?.play()}
+        onMouseLeave={() => mainVideoRef.current?.pause()}
+      >
         {selected ? (
           selected.type === "video" ? (
             <video
-              src={selected.url}
+              ref={mainVideoRef}
+              src={cldTransform(selected.url, "q_auto,ac_none")}
               muted
               loop
-              autoPlay
               playsInline
+              preload="metadata"
               controls
               className="absolute inset-0 w-full h-full object-cover"
             />
@@ -63,7 +79,7 @@ export function ListingGallery({
       </div>
 
       {media.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="flex gap-2 overflow-x-auto py-1">
           {media.map((item, i) => (
             <button
               key={i}
@@ -77,11 +93,14 @@ export function ListingGallery({
             >
               {item.type === "video" ? (
                 <video
-                  src={item.url}
+                  ref={thumbVideoRef}
+                  src={cldTransform(item.url, "q_auto,ac_none,w_160")}
                   muted
                   loop
-                  autoPlay
                   playsInline
+                  preload="metadata"
+                  onMouseEnter={() => thumbVideoRef.current?.play()}
+                  onMouseLeave={() => thumbVideoRef.current?.pause()}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : (

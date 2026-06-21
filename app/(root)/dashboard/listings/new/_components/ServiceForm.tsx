@@ -11,6 +11,10 @@ import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
 import { X } from "lucide-react";
+import {
+  CATEGORY_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 const WORLDWIDE = "Worldwide";
 
@@ -23,6 +27,8 @@ interface ServiceFormProps {
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
+  planMaxImages: number | null;
+  planMaxCertificationImages: number | null;
 }
 
 export function ServiceForm({
@@ -33,7 +39,12 @@ export function ServiceForm({
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
+  planMaxImages,
 }: ServiceFormProps) {
+  const imageLimit = getEffectiveLimit(
+    CATEGORY_IMAGE_MAX.SERVICE,
+    planMaxImages,
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -132,7 +143,8 @@ export function ServiceForm({
       <ImageUploader
         images={images}
         onChange={setImages}
-        max={6}
+        max={imageLimit.max}
+        isPlanLimited={imageLimit.isPlanLimited}
         label="Portfolio / Sample Photos"
       />
 

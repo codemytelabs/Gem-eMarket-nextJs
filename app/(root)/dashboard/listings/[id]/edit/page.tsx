@@ -16,9 +16,17 @@ export default async function EditListingPage({
   if (!session) redirect("/login");
 
   const { id } = await params;
-  const [listing, reelQuota] = await Promise.all([
+  const [listing, reelQuota, sellerPlan] = await Promise.all([
     db.listing.findFirst({ where: { id, sellerId: session.user.id } }),
     getReelQuotaStatus(session.user.id),
+    db.sellerSubscription.findUnique({
+      where: { sellerId: session.user.id },
+      select: {
+        plan: {
+          select: { maxImagesPerListing: true, maxCertificationImages: true },
+        },
+      },
+    }),
   ]);
   if (!listing) notFound();
 
@@ -39,6 +47,10 @@ export default async function EditListingPage({
           canUploadReels={reelQuota.allowed}
           reelsRemaining={reelQuota.remaining}
           reelsMaxPerMonth={reelQuota.maxPerMonth}
+          planMaxImages={sellerPlan?.plan.maxImagesPerListing ?? null}
+          planMaxCertificationImages={
+            sellerPlan?.plan.maxCertificationImages ?? null
+          }
         />
       </div>
     </div>

@@ -24,6 +24,8 @@ interface NewListingWizardProps {
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
+  planMaxImages: number | null;
+  planMaxCertificationImages: number | null;
 }
 
 export function NewListingWizard({
@@ -33,6 +35,8 @@ export function NewListingWizard({
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
+  planMaxImages,
+  planMaxCertificationImages,
 }: NewListingWizardProps) {
   const router = useRouter();
   const [category, setCategory] = useState<LISTING_CATEGORY | null>(null);
@@ -52,6 +56,8 @@ export function NewListingWizard({
     canUploadReels,
     reelsRemaining,
     reelsMaxPerMonth,
+    planMaxImages,
+    planMaxCertificationImages,
   };
 
   return (

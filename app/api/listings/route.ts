@@ -7,6 +7,11 @@ import { getCached, setCached } from "@/lib/redis";
 import slugify from "@/lib/utils/slugify";
 import { getReelQuotaStatus } from "@/lib/reelQuota";
 import { flattenFieldErrors } from "@/lib/utils/zodErrors";
+import {
+  CATEGORY_IMAGE_MAX,
+  CERTIFICATION_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -115,6 +120,32 @@ export async function POST(req: NextRequest) {
         { status: 403 },
       );
     }
+  }
+
+  const imageLimit = getEffectiveLimit(
+    CATEGORY_IMAGE_MAX[parsed.data.category],
+    plan?.maxImagesPerListing ?? null,
+  );
+  if (parsed.data.images.length > imageLimit.max) {
+    return NextResponse.json(
+      {
+        message: `Your plan allows up to ${imageLimit.max} photos per listing. Upgrade for more.`,
+      },
+      { status: 403 },
+    );
+  }
+
+  const certLimit = getEffectiveLimit(
+    CERTIFICATION_IMAGE_MAX,
+    plan?.maxCertificationImages ?? null,
+  );
+  if ((parsed.data.certificationImages?.length ?? 0) > certLimit.max) {
+    return NextResponse.json(
+      {
+        message: `Your plan allows up to ${certLimit.max} certification documents. Upgrade for more.`,
+      },
+      { status: 403 },
+    );
   }
 
   if (parsed.data.reelUrl) {

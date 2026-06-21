@@ -27,13 +27,11 @@ import { PriceFields } from "@/app/(root)/dashboard/listings/new/_components/sha
 import { SubmitBar } from "@/app/(root)/dashboard/listings/new/_components/shared/SubmitBar";
 import { COUNTRIES } from "@/lib/utils/countries";
 import { X } from "lucide-react";
-
-const IMAGE_MAX: Record<string, number> = {
-  GEM: 3,
-  JEWELLERY: 10,
-  PRECIOUS_METAL: 3,
-  SERVICE: 6,
-};
+import {
+  CATEGORY_IMAGE_MAX,
+  CERTIFICATION_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 const WORLDWIDE = "Worldwide";
 
@@ -92,15 +90,27 @@ export function ListingEditForm({
   canUploadReels = true,
   reelsRemaining = null,
   reelsMaxPerMonth = null,
+  planMaxImages = null,
+  planMaxCertificationImages = null,
 }: {
   listing: EditableListing;
   backHref: string;
   canUploadReels?: boolean;
   reelsRemaining?: number | null;
   reelsMaxPerMonth?: number | null;
+  planMaxImages?: number | null;
+  planMaxCertificationImages?: number | null;
 }) {
   const router = useRouter();
   const initialLocation = parseLocation(listing.currentLocation);
+  const imageLimit = getEffectiveLimit(
+    CATEGORY_IMAGE_MAX[listing.category],
+    planMaxImages,
+  );
+  const certLimit = getEffectiveLimit(
+    CERTIFICATION_IMAGE_MAX,
+    planMaxCertificationImages,
+  );
 
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
@@ -344,7 +354,8 @@ export function ListingEditForm({
       <ImageUploader
         images={images}
         onChange={setImages}
-        max={IMAGE_MAX[listing.category]}
+        max={imageLimit.max}
+        isPlanLimited={imageLimit.isPlanLimited}
         label="Photos"
       />
 
@@ -535,6 +546,8 @@ export function ListingEditForm({
             <CertificationUploader
               images={certificationImages}
               onChange={setCertificationImages}
+              max={certLimit.max}
+              isPlanLimited={certLimit.isPlanLimited}
             />
           </div>
         </>
@@ -648,6 +661,8 @@ export function ListingEditForm({
           <CertificationUploader
             images={certificationImages}
             onChange={setCertificationImages}
+            max={certLimit.max}
+            isPlanLimited={certLimit.isPlanLimited}
             label="Hallmark / certification documents (optional)"
           />
         </>
@@ -744,6 +759,8 @@ export function ListingEditForm({
             <CertificationUploader
               images={certificationImages}
               onChange={setCertificationImages}
+              max={certLimit.max}
+              isPlanLimited={certLimit.isPlanLimited}
               label="Hallmark / assay documents (optional)"
             />
           </div>

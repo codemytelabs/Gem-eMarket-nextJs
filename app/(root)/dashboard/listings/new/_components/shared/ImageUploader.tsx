@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, X, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Upload, X, Loader2, Sparkles } from "lucide-react";
 import { uploadImage } from "./uploadImage";
 import { labelClass } from "./FormFields";
 
@@ -10,6 +11,8 @@ interface ImageUploaderProps {
   onChange: (images: string[]) => void;
   max?: number;
   label?: string;
+  isPlanLimited?: boolean;
+  upgradeHref?: string;
 }
 
 export function ImageUploader({
@@ -17,6 +20,8 @@ export function ImageUploader({
   onChange,
   max = 3,
   label = "Photos",
+  isPlanLimited = false,
+  upgradeHref = "/dashboard/upgrade",
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -106,6 +111,19 @@ export function ImageUploader({
       </div>
 
       {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
+      {!error && isPlanLimited && images.length >= max && (
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+          <Sparkles className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+          Want to add more photos?{" "}
+          <Link
+            href={upgradeHref}
+            className="font-medium text-primary hover:underline"
+          >
+            Upgrade your plan
+          </Link>{" "}
+          for more image uploads.
+        </p>
+      )}
     </div>
   );
 }

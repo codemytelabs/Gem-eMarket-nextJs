@@ -17,6 +17,11 @@ import { PriceFields } from "./shared/PriceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
+import {
+  CATEGORY_IMAGE_MAX,
+  CERTIFICATION_IMAGE_MAX,
+  getEffectiveLimit,
+} from "@/lib/constants/imageLimits";
 
 interface JewelleryFormProps {
   onBack: () => void;
@@ -27,6 +32,8 @@ interface JewelleryFormProps {
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
+  planMaxImages: number | null;
+  planMaxCertificationImages: number | null;
 }
 
 export function JewelleryForm({
@@ -37,7 +44,17 @@ export function JewelleryForm({
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
+  planMaxImages,
+  planMaxCertificationImages,
 }: JewelleryFormProps) {
+  const imageLimit = getEffectiveLimit(
+    CATEGORY_IMAGE_MAX.JEWELLERY,
+    planMaxImages,
+  );
+  const certLimit = getEffectiveLimit(
+    CERTIFICATION_IMAGE_MAX,
+    planMaxCertificationImages,
+  );
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -116,7 +133,8 @@ export function JewelleryForm({
       <ImageUploader
         images={images}
         onChange={setImages}
-        max={10}
+        max={imageLimit.max}
+        isPlanLimited={imageLimit.isPlanLimited}
         label="Jewellery Photos"
       />
 
@@ -262,8 +280,10 @@ export function JewelleryForm({
       <CertificationUploader
         images={certificationImages}
         onChange={setCertificationImages}
+        max={certLimit.max}
+        isPlanLimited={certLimit.isPlanLimited}
         label="Hallmark / certification documents (optional)"
-        hint="Upload photos of hallmark certificates, gem lab reports, or assay documents."
+        hint={`Upload photos of hallmark certificates, gem lab reports, or assay documents. Max ${certLimit.max} images.`}
       />
 
       <PriceFields

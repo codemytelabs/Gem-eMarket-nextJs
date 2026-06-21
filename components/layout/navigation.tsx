@@ -187,7 +187,7 @@ export default function Navigation() {
               className={`flex items-center gap-2 p-2 cursor-pointer rounded ${hoveredCategory === category.id ? "bg-background" : ""}`}
               onMouseEnter={() => handleCategoryHover(category.id)}
             >
-              <div className="relative w-8 h-8 rounded flex-shrink-0 overflow-hidden bg-gray-200 dark:bg-gray-700">
+              <div className="relative w-8 h-8 rounded flex-shrink-0 overflow-hidden skeleton-shimmer">
                 <Image
                   src={category.image}
                   alt=""
@@ -217,7 +217,7 @@ export default function Navigation() {
                       className="group"
                       onClick={closeDropdown}
                     >
-                      <div className="relative mb-2 w-24 h-24 rounded-lg border-2 overflow-hidden transition-all duration-200 group-hover:scale-105 bg-gray-200 dark:bg-gray-700 border-border group-hover:border-primary-light">
+                      <div className="relative mb-2 w-24 h-24 rounded-lg border-2 overflow-hidden transition-all duration-200 group-hover:scale-105 skeleton-shimmer border-border group-hover:border-primary-light">
                         <Image
                           src={subcat.image}
                           alt={resolved.name}

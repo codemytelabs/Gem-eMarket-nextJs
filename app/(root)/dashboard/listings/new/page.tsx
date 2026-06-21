@@ -21,6 +21,16 @@ export default async function NewListingPage() {
         country: true,
         phone: true,
         whatsappNumber: true,
+        subscription: {
+          select: {
+            plan: {
+              select: {
+                maxImagesPerListing: true,
+                maxCertificationImages: true,
+              },
+            },
+          },
+        },
       },
     }),
     getReelQuotaStatus(session.user.id),
@@ -45,6 +55,10 @@ export default async function NewListingPage() {
           canUploadReels={reelQuota.allowed}
           reelsRemaining={reelQuota.remaining}
           reelsMaxPerMonth={reelQuota.maxPerMonth}
+          planMaxImages={seller?.subscription?.plan.maxImagesPerListing ?? null}
+          planMaxCertificationImages={
+            seller?.subscription?.plan.maxCertificationImages ?? null
+          }
         />
       </div>
     </div>

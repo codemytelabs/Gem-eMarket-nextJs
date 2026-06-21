@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ChevronDown } from "lucide-react";
 
 export const inputClass =
   "w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60";
@@ -70,7 +71,15 @@ export function SelectInput(
   props: React.SelectHTMLAttributes<HTMLSelectElement>,
 ) {
   const { className = "", ...rest } = props;
-  return <select className={`${inputClass} ${className}`} {...rest} />;
+  return (
+    <div className="relative">
+      <select
+        className={`${inputClass} appearance-none pr-9 ${className}`}
+        {...rest}
+      />
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+    </div>
+  );
 }
 
 export function Toggle({
