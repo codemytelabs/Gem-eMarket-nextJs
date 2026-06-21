@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, Zap, Crown, Building2 } from "lucide-react";
 import { DashboardNav } from "./_components/DashboardNav";
+import { getSellerPlanName } from "@/lib/getSellerPlanName";
 
 const planBadge: Record<
   string,
@@ -26,7 +27,8 @@ export default async function DashboardLayout({
   const session = await auth();
   if (!session || session.user.role === "BUYER") redirect("/login");
 
-  const badge = planBadge[session.user.planName] ?? planBadge.free;
+  const planName = await getSellerPlanName(session.user.id);
+  const badge = planBadge[planName] ?? planBadge.free;
   const { Icon: PlanIcon } = badge;
 
   return (
@@ -54,16 +56,13 @@ export default async function DashboardLayout({
                 )}
               </div>
 
-              {(session.user.planName === "free" ||
-                session.user.planName === "basic") && (
+              {(planName === "free" || planName === "basic") && (
                 <div className="p-3 rounded-lg bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-800/40">
                   <p className="text-xs font-semibold text-gray-200">
-                    {session.user.planName === "free"
-                      ? "Upgrade to Basic"
-                      : "Go Pro"}
+                    {planName === "free" ? "Upgrade to Basic" : "Go Pro"}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {session.user.planName === "free"
+                    {planName === "free"
                       ? "More listings + shop profile"
                       : "Unlimited listings + analytics"}
                   </p>

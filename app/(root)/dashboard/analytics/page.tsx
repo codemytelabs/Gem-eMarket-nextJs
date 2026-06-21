@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Eye, MessageSquare, Package, TrendingUp, Lock } from "lucide-react";
 import type { Metadata } from "next";
+import { getSellerPlanName } from "@/lib/getSellerPlanName";
 
 export const metadata: Metadata = { title: "Analytics — Dashboard" };
 
@@ -59,8 +60,8 @@ export default async function AnalyticsPage() {
   );
 
   const sellerId = session.user.id;
-  const hasAnalytics =
-    session.user.planName === "pro" || session.user.planName === "dealer";
+  const planName = await getSellerPlanName(sellerId);
+  const hasAnalytics = planName === "pro" || planName === "dealer";
 
   const [
     listingGroups,

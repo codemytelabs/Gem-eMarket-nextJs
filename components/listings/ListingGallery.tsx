@@ -45,6 +45,7 @@ export function ListingGallery({
               alt={title}
               fill
               unoptimized
+              sizes="(max-width: 1024px) 100vw, 60vw"
               className="object-cover"
               priority
             />
@@ -89,6 +90,7 @@ export function ListingGallery({
                   alt=""
                   fill
                   unoptimized
+                  sizes="80px"
                   className="object-cover"
                 />
               )}

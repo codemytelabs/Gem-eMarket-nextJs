@@ -167,6 +167,7 @@ export default async function ListingPage({ params }: Props) {
                           src={src}
                           alt={`Certificate ${i + 1}`}
                           fill
+                          sizes="80px"
                           className="object-cover"
                         />
                       </div>

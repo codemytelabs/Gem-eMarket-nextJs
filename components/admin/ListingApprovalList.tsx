@@ -192,6 +192,7 @@ export function ListingApprovalList({
                     src={listing.image}
                     alt={listing.title}
                     fill
+                    sizes="56px"
                     className="object-cover"
                   />
                 ) : (

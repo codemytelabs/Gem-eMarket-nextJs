@@ -72,6 +72,7 @@ export default async function ListingsPage() {
                       src={listing.images[0]}
                       alt={listing.title}
                       fill
+                      sizes="64px"
                       className="object-cover"
                     />
                   ) : (
