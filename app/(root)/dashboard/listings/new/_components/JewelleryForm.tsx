@@ -10,6 +10,7 @@ import {
   Toggle,
 } from "./shared/FormFields";
 import { ImageUploader } from "./shared/ImageUploader";
+import { ReelUploader } from "./shared/ReelUploader";
 import { CertificationUploader } from "./shared/CertificationUploader";
 import { LocationField } from "./shared/LocationField";
 import { PriceFields } from "./shared/PriceFields";
@@ -23,6 +24,9 @@ interface JewelleryFormProps {
   sellerLocation?: string;
   sellerCountry?: string;
   sellerPhone?: string;
+  canUploadReels: boolean;
+  reelsRemaining: number | null;
+  reelsMaxPerMonth: number | null;
 }
 
 export function JewelleryForm({
@@ -30,10 +34,14 @@ export function JewelleryForm({
   onSuccess,
   sellerLocation = "",
   sellerCountry = "LK",
+  canUploadReels,
+  reelsRemaining,
+  reelsMaxPerMonth,
 }: JewelleryFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [reelUrl, setReelUrl] = useState("");
   const [jewelleryType, setJewelleryType] = useState("");
   const [metalType, setMetalType] = useState("");
   const [metalPurity, setMetalPurity] = useState("");
@@ -48,7 +56,7 @@ export function JewelleryForm({
   const [currency, setCurrency] = useState("USD");
   const [isWholesale, setIsWholesale] = useState(false);
 
-  const { submit, loading, error } = useCreateListing(onSuccess);
+  const { submit, loading, error, fieldErrors } = useCreateListing(onSuccess);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +70,7 @@ export function JewelleryForm({
       title,
       description,
       images,
+      reelUrl: reelUrl || undefined,
       category: "JEWELLERY",
       jewelleryType: jewelleryType || undefined,
       metalType: metalType || undefined,
@@ -80,7 +89,7 @@ export function JewelleryForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <Field label="Title" required>
+      <Field label="Title" name="title" required error={fieldErrors.title}>
         <TextInput
           placeholder="e.g., 18K White Gold Sapphire Ring"
           value={title}
@@ -89,7 +98,12 @@ export function JewelleryForm({
         />
       </Field>
 
-      <Field label="Description" required>
+      <Field
+        label="Description"
+        name="description"
+        required
+        error={fieldErrors.description}
+      >
         <TextArea
           rows={4}
           placeholder="Describe the piece — craftsmanship, gemstone details, finish, and any hallmarks..."
@@ -106,8 +120,21 @@ export function JewelleryForm({
         label="Jewellery Photos"
       />
 
+      <ReelUploader
+        value={reelUrl}
+        onChange={setReelUrl}
+        canUpload={canUploadReels}
+        remaining={reelsRemaining}
+        maxPerMonth={reelsMaxPerMonth}
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Jewellery Type" required>
+        <Field
+          label="Jewellery Type"
+          name="jewelleryType"
+          required
+          error={fieldErrors.jewelleryType}
+        >
           <SelectInput
             value={jewelleryType}
             onChange={(e) => setJewelleryType(e.target.value)}
@@ -125,7 +152,9 @@ export function JewelleryForm({
         {jewelleryType === JEWELLERY_TYPE.RING && (
           <Field
             label="Ring Size"
+            name="ringSize"
             hint="International size or circumference in mm"
+            error={fieldErrors.ringSize}
           >
             <TextInput
               placeholder="e.g., 16 or US 7.5"
@@ -137,7 +166,11 @@ export function JewelleryForm({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Metal Type">
+        <Field
+          label="Metal Type"
+          name="metalType"
+          error={fieldErrors.metalType}
+        >
           <SelectInput
             value={metalType}
             onChange={(e) => setMetalType(e.target.value)}
@@ -151,7 +184,12 @@ export function JewelleryForm({
           </SelectInput>
         </Field>
 
-        <Field label="Metal Purity / Hallmark" hint="e.g., 18K, 925, 950">
+        <Field
+          label="Metal Purity / Hallmark"
+          name="metalPurity"
+          hint="e.g., 18K, 925, 950"
+          error={fieldErrors.metalPurity}
+        >
           <TextInput
             placeholder="e.g., 18K"
             value={metalPurity}
@@ -163,7 +201,9 @@ export function JewelleryForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field
           label="Accent Gemstone"
+          name="gemType"
           hint="Optional — the main gem set in the piece"
+          error={fieldErrors.gemType}
         >
           <SelectInput
             value={gemType}
@@ -178,7 +218,12 @@ export function JewelleryForm({
           </SelectInput>
         </Field>
 
-        <Field label="Total Weight (grams)" hint="Optional">
+        <Field
+          label="Total Weight (grams)"
+          name="weightGrams"
+          hint="Optional"
+          error={fieldErrors.weightGrams}
+        >
           <TextInput
             type="number"
             min="0"
@@ -192,7 +237,9 @@ export function JewelleryForm({
 
       <Field
         label="Origin"
+        name="gemOrigin"
         hint="Optional — country or region where the piece was crafted"
+        error={fieldErrors.gemOrigin}
       >
         <TextInput
           placeholder="e.g., Italy, Thailand, Sri Lanka"

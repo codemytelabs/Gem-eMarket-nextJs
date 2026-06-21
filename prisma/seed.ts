@@ -40,7 +40,7 @@ async function main() {
       priceUsdAnnual: 90,
       priceLkrAnnual: 29700,
       maxListings: 20,
-      maxReelsPerMonth: 2,
+      maxReelsPerMonth: 1,
       listingDurationDays: 90, // listings expire after 90 days
       hasShopProfile: true,
       hasAnalytics: false,

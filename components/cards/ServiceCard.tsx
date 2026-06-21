@@ -1,7 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ShieldCheck, Wrench, MapPin, Clock, ArrowRight } from "lucide-react";
-import { cldTransform } from "@/lib/cloudinary-url";
+import { ThumbnailMedia } from "./ThumbnailMedia";
 
 interface ServiceCardListing {
   id: string;
@@ -9,6 +8,7 @@ interface ServiceCardListing {
   title: string;
   description?: string | null;
   images: string[];
+  reelUrl?: string | null;
   serviceType?: string | null;
   pricingType?: string | null;
   turnaroundTime?: string | null;
@@ -53,13 +53,13 @@ export function ServiceCard({ listing }: { listing: ServiceCardListing }) {
     >
       {/* Wide image */}
       <div className="aspect-video relative bg-gray-100 dark:bg-gray-800">
-        {listing.images[0] ? (
-          <Image
-            src={cldTransform(listing.images[0], "f_auto,q_auto,w_500")}
+        {listing.reelUrl || listing.images[0] ? (
+          <ThumbnailMedia
+            images={listing.images}
+            reelUrl={listing.reelUrl}
             alt={listing.title}
-            fill
-            unoptimized
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            transform="f_auto,q_auto,w_500"
+            className="group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">

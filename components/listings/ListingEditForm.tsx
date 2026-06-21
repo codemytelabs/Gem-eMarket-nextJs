@@ -20,6 +20,7 @@ import {
   Toggle,
 } from "@/app/(root)/dashboard/listings/new/_components/shared/FormFields";
 import { ImageUploader } from "@/app/(root)/dashboard/listings/new/_components/shared/ImageUploader";
+import { ReelUploader } from "@/app/(root)/dashboard/listings/new/_components/shared/ReelUploader";
 import { CertificationUploader } from "@/app/(root)/dashboard/listings/new/_components/shared/CertificationUploader";
 import { LocationField } from "@/app/(root)/dashboard/listings/new/_components/shared/LocationField";
 import { PriceFields } from "@/app/(root)/dashboard/listings/new/_components/shared/PriceFields";
@@ -41,6 +42,7 @@ export interface EditableListing {
   title: string;
   description: string;
   images: string[];
+  reelUrl: string | null;
   category: "GEM" | "JEWELLERY" | "PRECIOUS_METAL" | "SERVICE";
   price: number;
   currency: string;
@@ -87,9 +89,15 @@ function parseLocation(currentLocation: string | null) {
 export function ListingEditForm({
   listing,
   backHref,
+  canUploadReels = true,
+  reelsRemaining = null,
+  reelsMaxPerMonth = null,
 }: {
   listing: EditableListing;
   backHref: string;
+  canUploadReels?: boolean;
+  reelsRemaining?: number | null;
+  reelsMaxPerMonth?: number | null;
 }) {
   const router = useRouter();
   const initialLocation = parseLocation(listing.currentLocation);
@@ -97,6 +105,7 @@ export function ListingEditForm({
   const [title, setTitle] = useState(listing.title);
   const [description, setDescription] = useState(listing.description);
   const [images, setImages] = useState(listing.images);
+  const [reelUrl, setReelUrl] = useState(listing.reelUrl ?? "");
   const [price, setPrice] = useState(String(listing.price));
   const [currency, setCurrency] = useState(listing.currency);
   const [isWholesale, setIsWholesale] = useState(listing.isWholesale);
@@ -175,6 +184,7 @@ export function ListingEditForm({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const SOVEREIGN_TO_GRAMS = 7.9881;
   const handleGramsChange = (val: string) => {
@@ -209,6 +219,7 @@ export function ListingEditForm({
     e.preventDefault();
     setLoading(true);
     setError("");
+    setFieldErrors({});
 
     const countryName =
       COUNTRIES.find((c) => c.code === locationCountry)?.name ??
@@ -221,6 +232,7 @@ export function ListingEditForm({
       title,
       description,
       images,
+      reelUrl: reelUrl || null,
       price: price ? Number(price) : undefined,
       currency,
       isWholesale,
@@ -287,6 +299,14 @@ export function ListingEditForm({
       });
       if (!res.ok) {
         const data = await res.json();
+        const errors: Record<string, string> = data.fieldErrors ?? {};
+        setFieldErrors(errors);
+        const firstKey = Object.keys(errors)[0];
+        if (firstKey) {
+          document
+            .getElementById(`field-${firstKey}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
         throw new Error(data.message ?? "Failed to save listing");
       }
       router.push(backHref);
@@ -299,7 +319,7 @@ export function ListingEditForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Field label="Title" required>
+      <Field label="Title" name="title" required error={fieldErrors.title}>
         <TextInput
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -307,7 +327,12 @@ export function ListingEditForm({
         />
       </Field>
 
-      <Field label="Description" required>
+      <Field
+        label="Description"
+        name="description"
+        required
+        error={fieldErrors.description}
+      >
         <TextArea
           rows={4}
           value={description}
@@ -323,6 +348,14 @@ export function ListingEditForm({
         label="Photos"
       />
 
+      <ReelUploader
+        value={reelUrl}
+        onChange={setReelUrl}
+        canUpload={canUploadReels}
+        remaining={reelsRemaining}
+        maxPerMonth={reelsMaxPerMonth}
+      />
+
       {listing.category === "GEM" && (
         <>
           <div className="bg-gray-50 rounded-xl p-4 space-y-4">
@@ -332,7 +365,11 @@ export function ListingEditForm({
               label="This is a parcel / lot (multiple stones)"
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Gem Type">
+              <Field
+                label="Gem Type"
+                name="gemType"
+                error={fieldErrors.gemType}
+              >
                 <SelectInput
                   value={gemType}
                   onChange={(e) => setGemType(e.target.value)}
@@ -346,7 +383,11 @@ export function ListingEditForm({
                 </SelectInput>
               </Field>
               {isLotSale ? (
-                <Field label="Number of Stones">
+                <Field
+                  label="Number of Stones"
+                  name="lotSize"
+                  error={fieldErrors.lotSize}
+                >
                   <TextInput
                     type="number"
                     min="2"
@@ -355,7 +396,11 @@ export function ListingEditForm({
                   />
                 </Field>
               ) : (
-                <Field label="Total Carat Weight (ct)">
+                <Field
+                  label="Total Carat Weight (ct)"
+                  name="caratWeight"
+                  error={fieldErrors.caratWeight}
+                >
                   <TextInput
                     type="number"
                     min="0"
@@ -367,7 +412,11 @@ export function ListingEditForm({
               )}
             </div>
             {isLotSale && (
-              <Field label="Total Carat Weight (ct)">
+              <Field
+                label="Total Carat Weight (ct)"
+                name="caratWeight"
+                error={fieldErrors.caratWeight}
+              >
                 <TextInput
                   type="number"
                   min="0"
@@ -380,21 +429,33 @@ export function ListingEditForm({
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Length (mm)">
+            <Field
+              label="Length (mm)"
+              name="dimensionL"
+              error={fieldErrors.dimensionL}
+            >
               <TextInput
                 type="number"
                 value={dimL}
                 onChange={(e) => setDimL(e.target.value)}
               />
             </Field>
-            <Field label="Width (mm)">
+            <Field
+              label="Width (mm)"
+              name="dimensionW"
+              error={fieldErrors.dimensionW}
+            >
               <TextInput
                 type="number"
                 value={dimW}
                 onChange={(e) => setDimW(e.target.value)}
               />
             </Field>
-            <Field label="Height (mm)">
+            <Field
+              label="Height (mm)"
+              name="dimensionH"
+              error={fieldErrors.dimensionH}
+            >
               <TextInput
                 type="number"
                 value={dimH}
@@ -403,7 +464,11 @@ export function ListingEditForm({
             </Field>
           </div>
 
-          <Field label="Origin of Gem">
+          <Field
+            label="Origin of Gem"
+            name="gemOrigin"
+            error={fieldErrors.gemOrigin}
+          >
             <TextInput
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
@@ -418,7 +483,11 @@ export function ListingEditForm({
             label="Current Location"
           />
 
-          <Field label="Treatment Status">
+          <Field
+            label="Treatment Status"
+            name="treatmentStatus"
+            error={fieldErrors.treatmentStatus}
+          >
             <SelectInput
               value={treatmentStatus}
               onChange={(e) => setTreatmentStatus(e.target.value)}
@@ -435,7 +504,11 @@ export function ListingEditForm({
           <div className="bg-gray-50 rounded-xl p-4 space-y-4">
             <p className="text-sm font-semibold text-gray-700">Certification</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Lab / Certification Body">
+              <Field
+                label="Lab / Certification Body"
+                name="certificationBody"
+                error={fieldErrors.certificationBody}
+              >
                 <SelectInput
                   value={certificationBody}
                   onChange={(e) => setCertificationBody(e.target.value)}
@@ -448,7 +521,11 @@ export function ListingEditForm({
                   ))}
                 </SelectInput>
               </Field>
-              <Field label="Certificate Number">
+              <Field
+                label="Certificate Number"
+                name="certificationNumber"
+                error={fieldErrors.certificationNumber}
+              >
                 <TextInput
                   value={certificationNumber}
                   onChange={(e) => setCertificationNumber(e.target.value)}
@@ -466,7 +543,11 @@ export function ListingEditForm({
       {listing.category === "JEWELLERY" && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Jewellery Type">
+            <Field
+              label="Jewellery Type"
+              name="jewelleryType"
+              error={fieldErrors.jewelleryType}
+            >
               <SelectInput
                 value={jewelleryType}
                 onChange={(e) => setJewelleryType(e.target.value)}
@@ -480,7 +561,11 @@ export function ListingEditForm({
               </SelectInput>
             </Field>
             {jewelleryType === JEWELLERY_TYPE.RING && (
-              <Field label="Ring Size">
+              <Field
+                label="Ring Size"
+                name="ringSize"
+                error={fieldErrors.ringSize}
+              >
                 <TextInput
                   value={ringSize}
                   onChange={(e) => setRingSize(e.target.value)}
@@ -489,7 +574,11 @@ export function ListingEditForm({
             )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Metal Type">
+            <Field
+              label="Metal Type"
+              name="metalType"
+              error={fieldErrors.metalType}
+            >
               <SelectInput
                 value={metalType}
                 onChange={(e) => setMetalType(e.target.value)}
@@ -502,7 +591,11 @@ export function ListingEditForm({
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Metal Purity / Hallmark">
+            <Field
+              label="Metal Purity / Hallmark"
+              name="metalPurity"
+              error={fieldErrors.metalPurity}
+            >
               <TextInput
                 value={metalPurity}
                 onChange={(e) => setMetalPurity(e.target.value)}
@@ -510,7 +603,11 @@ export function ListingEditForm({
             </Field>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Accent Gemstone">
+            <Field
+              label="Accent Gemstone"
+              name="gemType"
+              error={fieldErrors.gemType}
+            >
               <SelectInput
                 value={gemType}
                 onChange={(e) => setGemType(e.target.value)}
@@ -523,7 +620,11 @@ export function ListingEditForm({
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Total Weight (grams)">
+            <Field
+              label="Total Weight (grams)"
+              name="weightGrams"
+              error={fieldErrors.weightGrams}
+            >
               <TextInput
                 type="number"
                 value={weightGrams}
@@ -531,7 +632,7 @@ export function ListingEditForm({
               />
             </Field>
           </div>
-          <Field label="Origin">
+          <Field label="Origin" name="gemOrigin" error={fieldErrors.gemOrigin}>
             <TextInput
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
@@ -555,7 +656,11 @@ export function ListingEditForm({
       {listing.category === "PRECIOUS_METAL" && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Metal Type">
+            <Field
+              label="Metal Type"
+              name="metalType"
+              error={fieldErrors.metalType}
+            >
               <SelectInput
                 value={metalType}
                 onChange={(e) => setMetalType(e.target.value)}
@@ -568,7 +673,11 @@ export function ListingEditForm({
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Purity / Karat">
+            <Field
+              label="Purity / Karat"
+              name="metalPurity"
+              error={fieldErrors.metalPurity}
+            >
               <SelectInput
                 value={metalPurity}
                 onChange={(e) => setMetalPurity(e.target.value)}
@@ -584,14 +693,22 @@ export function ListingEditForm({
           </div>
           <div className="bg-gray-50 rounded-xl p-4 space-y-3">
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Grams (g)">
+              <Field
+                label="Grams (g)"
+                name="weightGrams"
+                error={fieldErrors.weightGrams}
+              >
                 <TextInput
                   type="number"
                   value={weightGrams}
                   onChange={(e) => handleGramsChange(e.target.value)}
                 />
               </Field>
-              <Field label="Sovereigns">
+              <Field
+                label="Sovereigns"
+                name="weightSovereigns"
+                error={fieldErrors.weightSovereigns}
+              >
                 <TextInput
                   type="number"
                   value={weightSovereigns}
@@ -600,7 +717,7 @@ export function ListingEditForm({
               </Field>
             </div>
           </div>
-          <Field label="Origin">
+          <Field label="Origin" name="gemOrigin" error={fieldErrors.gemOrigin}>
             <TextInput
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
@@ -614,7 +731,11 @@ export function ListingEditForm({
             label="Current Location"
           />
           <div className="bg-gray-50 rounded-xl p-4 space-y-4">
-            <Field label="Assay / Hallmark Certificate Number">
+            <Field
+              label="Assay / Hallmark Certificate Number"
+              name="certificationNumber"
+              error={fieldErrors.certificationNumber}
+            >
               <TextInput
                 value={certificationNumber}
                 onChange={(e) => setCertificationNumber(e.target.value)}
@@ -632,7 +753,11 @@ export function ListingEditForm({
       {listing.category === "SERVICE" && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Service Type">
+            <Field
+              label="Service Type"
+              name="serviceType"
+              error={fieldErrors.serviceType}
+            >
               <SelectInput
                 value={serviceType}
                 onChange={(e) => setServiceType(e.target.value)}
@@ -645,7 +770,11 @@ export function ListingEditForm({
                 ))}
               </SelectInput>
             </Field>
-            <Field label="Pricing Type">
+            <Field
+              label="Pricing Type"
+              name="pricingType"
+              error={fieldErrors.pricingType}
+            >
               <SelectInput
                 value={pricingType}
                 onChange={(e) => setPricingType(e.target.value)}
@@ -658,7 +787,11 @@ export function ListingEditForm({
               </SelectInput>
             </Field>
           </div>
-          <Field label="Typical Turnaround Time">
+          <Field
+            label="Typical Turnaround Time"
+            name="turnaroundTime"
+            error={fieldErrors.turnaroundTime}
+          >
             <TextInput
               value={turnaroundTime}
               onChange={(e) => setTurnaroundTime(e.target.value)}
@@ -760,7 +893,9 @@ export function ListingEditForm({
         </p>
         <Field
           label="Contact Phone"
+          name="contactPhone"
           hint="Leave blank to use your profile number"
+          error={fieldErrors.contactPhone}
         >
           <TextInput
             type="tel"

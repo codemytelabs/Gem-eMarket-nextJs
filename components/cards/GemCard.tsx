@@ -1,13 +1,13 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ShieldCheck, Gem, MapPin } from "lucide-react";
-import { cldTransform } from "@/lib/cloudinary-url";
+import { ThumbnailMedia } from "./ThumbnailMedia";
 
 interface GemCardListing {
   id: string;
   slug: string;
   title: string;
   images: string[];
+  reelUrl?: string | null;
   caratWeight?: unknown;
   gemOrigin?: string | null;
   currentLocation?: string | null;
@@ -29,13 +29,13 @@ export function GemCard({ listing }: { listing: GemCardListing }) {
     >
       {/* Image */}
       <div className="aspect-square relative bg-gray-100 dark:bg-gray-800">
-        {listing.images[0] ? (
-          <Image
-            src={cldTransform(listing.images[0], "f_auto,q_auto,w_400")}
+        {listing.reelUrl || listing.images[0] ? (
+          <ThumbnailMedia
+            images={listing.images}
+            reelUrl={listing.reelUrl}
             alt={listing.title}
-            fill
-            unoptimized
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            transform="f_auto,q_auto,w_400"
+            className="group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">

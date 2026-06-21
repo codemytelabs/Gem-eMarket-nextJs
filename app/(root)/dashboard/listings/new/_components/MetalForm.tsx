@@ -10,6 +10,7 @@ import {
   Toggle,
 } from "./shared/FormFields";
 import { ImageUploader } from "./shared/ImageUploader";
+import { ReelUploader } from "./shared/ReelUploader";
 import { CertificationUploader } from "./shared/CertificationUploader";
 import { LocationField } from "./shared/LocationField";
 import { PriceFields } from "./shared/PriceFields";
@@ -24,6 +25,9 @@ interface MetalFormProps {
   onSuccess: () => void;
   sellerLocation?: string;
   sellerCountry?: string;
+  canUploadReels: boolean;
+  reelsRemaining: number | null;
+  reelsMaxPerMonth: number | null;
 }
 
 export function MetalForm({
@@ -31,10 +35,14 @@ export function MetalForm({
   onSuccess,
   sellerLocation = "",
   sellerCountry = "LK",
+  canUploadReels,
+  reelsRemaining,
+  reelsMaxPerMonth,
 }: MetalFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [reelUrl, setReelUrl] = useState("");
   const [metalType, setMetalType] = useState("");
   const [metalPurity, setMetalPurity] = useState("");
   const [weightGrams, setWeightGrams] = useState("");
@@ -48,7 +56,7 @@ export function MetalForm({
   const [currency, setCurrency] = useState("USD");
   const [isWholesale, setIsWholesale] = useState(false);
 
-  const { submit, loading, error } = useCreateListing(onSuccess);
+  const { submit, loading, error, fieldErrors } = useCreateListing(onSuccess);
 
   const handleGramsChange = (val: string) => {
     setWeightGrams(val);
@@ -80,6 +88,7 @@ export function MetalForm({
       title,
       description,
       images,
+      reelUrl: reelUrl || undefined,
       category: "PRECIOUS_METAL",
       metalType: metalType || undefined,
       metalPurity: metalPurity || undefined,
@@ -98,7 +107,12 @@ export function MetalForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <Field label="Listing Title" required>
+        <Field
+          label="Listing Title"
+          name="title"
+          required
+          error={fieldErrors.title}
+        >
           <TextInput
             placeholder="e.g., 22K Gold Bar — 50g"
             value={title}
@@ -107,7 +121,12 @@ export function MetalForm({
           />
         </Field>
 
-        <Field label="Description" required>
+        <Field
+          label="Description"
+          name="description"
+          required
+          error={fieldErrors.description}
+        >
           <TextArea
             rows={4}
             placeholder="Describe the item, its form (bar, coin, scrap), and condition..."
@@ -125,8 +144,21 @@ export function MetalForm({
         label="Photos"
       />
 
+      <ReelUploader
+        value={reelUrl}
+        onChange={setReelUrl}
+        canUpload={canUploadReels}
+        remaining={reelsRemaining}
+        maxPerMonth={reelsMaxPerMonth}
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Metal Type" required>
+        <Field
+          label="Metal Type"
+          name="metalType"
+          required
+          error={fieldErrors.metalType}
+        >
           <SelectInput
             value={metalType}
             onChange={(e) => setMetalType(e.target.value)}
@@ -143,8 +175,10 @@ export function MetalForm({
 
         <Field
           label="Purity / Karat"
+          name="metalPurity"
           required
           hint="Select the fineness of the metal"
+          error={fieldErrors.metalPurity}
         >
           <SelectInput
             value={metalPurity}
@@ -169,7 +203,12 @@ export function MetalForm({
           </span>
         </p>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Grams (g)" required>
+          <Field
+            label="Grams (g)"
+            name="weightGrams"
+            required
+            error={fieldErrors.weightGrams}
+          >
             <TextInput
               type="number"
               min="0"
@@ -180,7 +219,12 @@ export function MetalForm({
               required
             />
           </Field>
-          <Field label="Sovereigns" hint="1 sovereign ≈ 7.9881 g">
+          <Field
+            label="Sovereigns"
+            name="weightSovereigns"
+            hint="1 sovereign ≈ 7.9881 g"
+            error={fieldErrors.weightSovereigns}
+          >
             <TextInput
               type="number"
               min="0"
@@ -201,7 +245,9 @@ export function MetalForm({
 
       <Field
         label="Origin"
+        name="gemOrigin"
         hint="Optional — country or region where the metal was sourced"
+        error={fieldErrors.gemOrigin}
       >
         <TextInput
           placeholder="e.g., South Africa, Switzerland"
@@ -226,7 +272,12 @@ export function MetalForm({
           Certification
         </p>
 
-        <Field label="Assay / Hallmark Certificate Number" hint="Optional">
+        <Field
+          label="Assay / Hallmark Certificate Number"
+          name="certificationNumber"
+          hint="Optional"
+          error={fieldErrors.certificationNumber}
+        >
           <TextInput
             placeholder="e.g., AGMC-2024-00123"
             value={certificationNumber}

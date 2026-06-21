@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { createListingSchema } from "@/lib/validations/listing";
 import { getCached, setCached } from "@/lib/redis";
 import slugify from "@/lib/utils/slugify";
+import { getReelQuotaStatus } from "@/lib/reelQuota";
+import { flattenFieldErrors } from "@/lib/utils/zodErrors";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -86,7 +88,10 @@ export async function POST(req: NextRequest) {
   const parsed = createListingSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: parsed.error.issues[0].message },
+      {
+        message: parsed.error.issues[0].message,
+        fieldErrors: flattenFieldErrors(parsed.error),
+      },
       { status: 400 },
     );
   }
@@ -107,6 +112,16 @@ export async function POST(req: NextRequest) {
         {
           message: `Your ${plan.displayName} plan allows max ${plan.maxListings} active listings. Upgrade to add more.`,
         },
+        { status: 403 },
+      );
+    }
+  }
+
+  if (parsed.data.reelUrl) {
+    const quota = await getReelQuotaStatus(session.user.id);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        { message: "Your plan's reel upload allowance is used up." },
         { status: 403 },
       );
     }
@@ -151,6 +166,12 @@ export async function POST(req: NextRequest) {
       status: "PENDING_REVIEW",
     },
   });
+
+  if (listing.reelUrl) {
+    await db.reelUpload.create({
+      data: { sellerId: session.user.id, listingId: listing.id },
+    });
+  }
 
   return NextResponse.json(listing, { status: 201 });
 }

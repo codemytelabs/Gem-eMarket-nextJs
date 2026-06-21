@@ -9,6 +9,7 @@ const baseListingSchema = z.object({
     .array(z.string().url())
     .min(1, "At least one image required")
     .max(10),
+  reelUrl: z.string().url().nullable().optional(),
   category: z.enum(["GEM", "JEWELLERY", "PRECIOUS_METAL", "SERVICE"]),
   gemType: z.string().optional(),
   gemOrigin: z.string().optional(),

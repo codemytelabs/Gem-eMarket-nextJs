@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { ListingEditForm } from "@/components/listings/ListingEditForm";
 import { toEditableListing } from "@/lib/utils/serializeListing";
+import { getReelQuotaStatus } from "@/lib/reelQuota";
 
 export const metadata = { title: "Edit Listing" };
 
@@ -15,9 +16,10 @@ export default async function EditListingPage({
   if (!session) redirect("/login");
 
   const { id } = await params;
-  const listing = await db.listing.findFirst({
-    where: { id, sellerId: session.user.id },
-  });
+  const [listing, reelQuota] = await Promise.all([
+    db.listing.findFirst({ where: { id, sellerId: session.user.id } }),
+    getReelQuotaStatus(session.user.id),
+  ]);
   if (!listing) notFound();
 
   return (
@@ -34,6 +36,9 @@ export default async function EditListingPage({
         <ListingEditForm
           listing={toEditableListing(listing)}
           backHref="/dashboard/listings"
+          canUploadReels={reelQuota.allowed}
+          reelsRemaining={reelQuota.remaining}
+          reelsMaxPerMonth={reelQuota.maxPerMonth}
         />
       </div>
     </div>

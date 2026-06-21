@@ -7,6 +7,7 @@ export function toEditableListing(listing: Listing): EditableListing {
     title: listing.title,
     description: listing.description,
     images: listing.images,
+    reelUrl: listing.reelUrl,
     category: listing.category,
     price: Number(listing.price),
     currency: listing.currency,
