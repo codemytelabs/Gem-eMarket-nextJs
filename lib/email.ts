@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { escapeHtml } from "@/lib/utils/escape-html";
 
 // Swap to any email provider by replacing this file.
 // Required env vars: RESEND_API_KEY, EMAIL_FROM
@@ -39,9 +40,9 @@ export async function sendEnquiryNotification(
     subject: `New enquiry on "${listingTitle}" — GemCeylon`,
     html: `
       <h2>New Enquiry</h2>
-      <p>Hi ${sellerName},</p>
-      <p><strong>${buyerName}</strong> sent an enquiry on your listing <strong>${listingTitle}</strong>:</p>
-      <blockquote>${message}</blockquote>
+      <p>Hi ${escapeHtml(sellerName)},</p>
+      <p><strong>${escapeHtml(buyerName)}</strong> sent an enquiry on your listing <strong>${escapeHtml(listingTitle)}</strong>:</p>
+      <blockquote>${escapeHtml(message)}</blockquote>
       <p>Log in to your dashboard to respond.</p>
       <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/enquiries">View enquiry →</a>
     `,
@@ -59,7 +60,7 @@ export async function sendSubscriptionConfirmation(
     subject: `You're now on GemCeylon ${planName}`,
     html: `
       <h2>Subscription Confirmed</h2>
-      <p>Hi ${name}, welcome to <strong>${planName}</strong>!</p>
+      <p>Hi ${escapeHtml(name)}, welcome to <strong>${escapeHtml(planName)}</strong>!</p>
       <p>Your plan is active until <strong>${periodEnd.toLocaleDateString()}</strong>.</p>
       <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard">Go to your dashboard →</a>
     `,
@@ -84,7 +85,7 @@ export async function sendDailyMetalPriceDigest(
     subject: `Daily metal price update — ${new Date().toLocaleDateString()}`,
     html: `
       <h2>Today's Metal Prices</h2>
-      <p>Hi ${name},</p>
+      <p>Hi ${escapeHtml(name)},</p>
       <table border="1" cellpadding="8" style="border-collapse:collapse">
         <tr><th>Metal</th><th>Price/gram</th><th>24h Change</th></tr>
         ${rows}
