@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { buildUploadFolder, signUploadParams } from "@/lib/cloudinary";
 import { rateLimit } from "@/lib/redis";
+import { getReelQuotaStatus } from "@/lib/reelQuota";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const DOCUMENT_TYPES = [...IMAGE_TYPES, "application/pdf", "image/tiff"];
+const VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -27,24 +30,53 @@ export async function POST(req: NextRequest) {
 
   const { contentType, folder = "listings", sizeBytes } = await req.json();
 
-  const allowed = folder === "documents" ? DOCUMENT_TYPES : IMAGE_TYPES;
-  if (!allowed.includes(contentType)) {
-    return NextResponse.json(
-      {
-        message:
-          folder === "documents"
-            ? "Only JPEG, PNG, WebP, AVIF, TIFF, and PDF files are allowed"
-            : "Only JPEG, PNG, WebP, and AVIF images are allowed",
-      },
-      { status: 400 },
-    );
-  }
+  if (folder === "reels") {
+    const baseContentType =
+      typeof contentType === "string" ? contentType.split(";")[0] : "";
+    if (!VIDEO_TYPES.includes(baseContentType)) {
+      return NextResponse.json(
+        { message: "Only MP4, MOV, and WebM videos are allowed" },
+        { status: 400 },
+      );
+    }
+    if (sizeBytes && sizeBytes > MAX_VIDEO_SIZE_BYTES) {
+      return NextResponse.json(
+        { message: "Video exceeds the 50 MB limit" },
+        { status: 400 },
+      );
+    }
+    const quota = await getReelQuotaStatus(session.user.id);
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          message:
+            quota.maxPerMonth === 0
+              ? "Upgrade your plan to upload reels"
+              : "You've used this month's reel upload allowance",
+        },
+        { status: 403 },
+      );
+    }
+  } else {
+    const allowed = folder === "documents" ? DOCUMENT_TYPES : IMAGE_TYPES;
+    if (!allowed.includes(contentType)) {
+      return NextResponse.json(
+        {
+          message:
+            folder === "documents"
+              ? "Only JPEG, PNG, WebP, AVIF, TIFF, and PDF files are allowed"
+              : "Only JPEG, PNG, WebP, and AVIF images are allowed",
+        },
+        { status: 400 },
+      );
+    }
 
-  if (sizeBytes && sizeBytes > MAX_SIZE_BYTES) {
-    return NextResponse.json(
-      { message: "File exceeds the 10 MB limit" },
-      { status: 400 },
-    );
+    if (sizeBytes && sizeBytes > MAX_SIZE_BYTES) {
+      return NextResponse.json(
+        { message: "File exceeds the 10 MB limit" },
+        { status: 400 },
+      );
+    }
   }
 
   // Only sign the params the client actually sends back — Cloudinary requires

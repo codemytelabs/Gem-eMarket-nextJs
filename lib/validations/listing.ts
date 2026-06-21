@@ -9,6 +9,7 @@ const baseListingSchema = z.object({
     .array(z.string().url())
     .min(1, "At least one image required")
     .max(10),
+  reelUrl: z.string().url().nullable().optional(),
   category: z.enum(["GEM", "JEWELLERY", "PRECIOUS_METAL", "SERVICE"]),
   gemType: z.string().optional(),
   gemOrigin: z.string().optional(),
@@ -71,6 +72,14 @@ export const seoUpdateSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens")
     .optional(),
 });
+
+export const adminListingActionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("approve") }),
+  z.object({
+    action: z.literal("request_changes"),
+    reason: z.string().min(1, "A reason is required"),
+  }),
+]);
 
 export type CreateListingInput = z.infer<typeof createListingSchema>;
 export type UpdateListingInput = z.infer<typeof updateListingSchema>;

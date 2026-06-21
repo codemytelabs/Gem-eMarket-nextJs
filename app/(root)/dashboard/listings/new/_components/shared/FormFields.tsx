@@ -12,17 +12,42 @@ interface FieldProps {
   label: string;
   required?: boolean;
   hint?: string;
+  name?: string;
+  error?: string;
   children: React.ReactNode;
 }
 
-export function Field({ label, required, hint, children }: FieldProps) {
+export function Field({
+  label,
+  required,
+  hint,
+  name,
+  error,
+  children,
+}: FieldProps) {
+  const content =
+    error && React.isValidElement<{ className?: string }>(children)
+      ? React.cloneElement(children, {
+          className: [
+            children.props.className ?? "",
+            "border-red-500 focus:ring-red-500",
+          ]
+            .filter(Boolean)
+            .join(" "),
+        })
+      : children;
+
   return (
-    <div>
+    <div id={name ? `field-${name}` : undefined}>
       <label className={labelClass}>
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      {children}
-      {hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+      {content}
+      {error ? (
+        <p className="mt-1 text-xs text-red-500">{error}</p>
+      ) : (
+        hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>
+      )}
     </div>
   );
 }

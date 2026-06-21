@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { getSellerPlanName } from "@/lib/getSellerPlanName";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -9,7 +10,8 @@ export async function GET(req: NextRequest) {
   }
 
   // Only PRO and DEALER plans get analytics
-  if (!["pro", "dealer"].includes(session.user.planName)) {
+  const planName = await getSellerPlanName(session.user.id);
+  if (!["pro", "dealer"].includes(planName)) {
     return NextResponse.json(
       { message: "Analytics is available on Pro and Dealer plans" },
       { status: 403 },

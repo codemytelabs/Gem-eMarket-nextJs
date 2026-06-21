@@ -7,10 +7,10 @@ interface SignResponse {
   message?: string;
 }
 
-export async function uploadImage(
+async function getUploadSignature(
   file: File,
-  folder: "listings" | "documents" = "listings",
-): Promise<string> {
+  folder: string,
+): Promise<Required<Omit<SignResponse, "message">>> {
   const signRes = await fetch("/api/upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -38,9 +38,25 @@ export async function uploadImage(
     apiKey,
     cloudName,
   } = signData;
-  if (!timestamp || !signature || !apiKey || !cloudName) {
+  if (!timestamp || !signature || !apiKey || !cloudName || !cloudFolder) {
     throw new Error("No upload credentials received from server");
   }
+
+  return { timestamp, signature, folder: cloudFolder, apiKey, cloudName };
+}
+
+async function uploadToCloudinary(
+  file: File,
+  folder: string,
+  resourceType: "image" | "video",
+): Promise<string> {
+  const {
+    timestamp,
+    signature,
+    folder: cloudFolder,
+    apiKey,
+    cloudName,
+  } = await getUploadSignature(file, folder);
 
   // Browser uploads straight to Cloudinary — our server never touches the
   // file bytes, so it never spends bandwidth or memory on the upload itself.
@@ -49,10 +65,10 @@ export async function uploadImage(
   formData.append("api_key", apiKey);
   formData.append("timestamp", String(timestamp));
   formData.append("signature", signature);
-  formData.append("folder", cloudFolder!);
+  formData.append("folder", cloudFolder);
 
   const uploadRes = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
     { method: "POST", body: formData },
   );
 
@@ -64,4 +80,18 @@ export async function uploadImage(
   }
 
   return uploadData.secure_url as string;
+}
+
+export async function uploadImage(
+  file: File,
+  folder: "listings" | "documents" = "listings",
+): Promise<string> {
+  return uploadToCloudinary(file, folder, "image");
+}
+
+export async function uploadVideo(
+  file: File,
+  folder: "reels" = "reels",
+): Promise<string> {
+  return uploadToCloudinary(file, folder, "video");
 }
