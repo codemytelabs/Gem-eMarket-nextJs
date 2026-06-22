@@ -833,7 +833,7 @@ export default function Navigation() {
 
       {/* Floating message button - logged-in users only */}
       {session?.user && (
-        <div className="fixed bottom-6 right-6 z-50" ref={messagesRef}>
+        <div className="fixed bottom-6 right-6 z-[100]" ref={messagesRef}>
           <button
             onClick={toggleMessagesPopover}
             className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-dark transition-colors"

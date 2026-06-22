@@ -8,7 +8,7 @@ import { labelClass } from "./FormFields";
 import { VideoTrimModal } from "./VideoTrimModal";
 import { isTrimSupported } from "@/lib/utils/trimVideo";
 
-const MAX_DURATION_SECONDS = 10;
+const MAX_DURATION_SECONDS = 15;
 
 interface ReelUploaderProps {
   value: string;
@@ -98,7 +98,7 @@ export function ReelUploader({
   };
 
   return (
-    <div>
+    <div className="px-2">
       <label className={labelClass}>
         Reel / Short Video{" "}
         <span className="text-xs text-gray-400 font-normal">
@@ -128,7 +128,7 @@ export function ReelUploader({
         ) : (
           <label
             onClick={handleTileClick}
-            className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors"
+            className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors p-2"
           >
             {uploading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

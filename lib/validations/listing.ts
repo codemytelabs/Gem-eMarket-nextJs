@@ -5,10 +5,7 @@ const baseListingSchema = z.object({
   description: z.string().min(20, "Description must be at least 20 characters"),
   price: z.number().positive("Price must be positive"),
   currency: z.string().default("USD"),
-  images: z
-    .array(z.string().url())
-    .min(1, "At least one image required")
-    .max(10),
+  images: z.array(z.string().url()).max(10),
   reelUrl: z.string().url().nullable().optional(),
   category: z.enum(["GEM", "JEWELLERY", "PRECIOUS_METAL", "SERVICE"]),
   gemType: z.string().optional(),
@@ -29,6 +26,8 @@ const baseListingSchema = z.object({
   // Contact
   contactPhone: z.string().optional(),
   hideContactPhone: z.boolean().optional(),
+  whatsappEnabled: z.boolean().optional(),
+  whatsappNumber: z.string().optional(),
   metalType: z.string().optional(),
   metalPurity: z.string().optional(),
   weightGrams: z.number().positive().optional(),
@@ -51,13 +50,12 @@ export const updateListingSchema = baseListingSchema.partial();
 
 export const createListingSchema = baseListingSchema.superRefine(
   (data, ctx) => {
-    if (
-      (data.category === "GEM" || data.category === "PRECIOUS_METAL") &&
-      data.images.length < 3
-    ) {
+    // At least one photo or video is required — a reel covers that on its
+    // own, so only require an image when there's no reel.
+    if (!data.reelUrl && data.images.length < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "At least 3 images are required for this category",
+        message: "At least one photo or video is required",
         path: ["images"],
       });
     }

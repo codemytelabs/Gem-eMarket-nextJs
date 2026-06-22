@@ -59,7 +59,6 @@ export default async function ListingPage({ params }: Props) {
           isVerified: true,
           locationCity: true,
           specialties: true,
-          whatsappNumber: true,
           subscription: { select: { plan: { select: { name: true } } } },
         },
       },
@@ -228,7 +227,9 @@ export default async function ListingPage({ params }: Props) {
                 contactPhone={
                   listing.hideContactPhone ? null : listing.contactPhone
                 }
-                whatsappNumber={seller.whatsappNumber}
+                whatsappNumber={
+                  listing.whatsappEnabled ? listing.whatsappNumber : null
+                }
               />
             </div>
           </div>

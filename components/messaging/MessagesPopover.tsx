@@ -14,7 +14,7 @@ export default function MessagesPopover() {
   if (!session?.user) return null;
 
   return (
-    <div className="absolute bottom-full right-0 mb-3 w-80 rounded-xl border border-border bg-surface shadow-2xl overflow-hidden">
+    <div className="fixed inset-x-4 bottom-24 z-[100] rounded-xl border border-border bg-surface shadow-2xl overflow-hidden sm:absolute sm:inset-x-auto sm:bottom-full sm:right-0 sm:mb-3 sm:w-80">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <button
@@ -36,7 +36,7 @@ export default function MessagesPopover() {
         <span className="text-sm font-semibold text-text">Messages</span>
       </div>
 
-      <div className="max-h-96 overflow-y-auto">
+      <div className="max-h-[60vh] overflow-y-auto sm:max-h-96">
         <ConversationList
           conversations={conversations.slice(0, 10)}
           currentUserId={session.user.id}

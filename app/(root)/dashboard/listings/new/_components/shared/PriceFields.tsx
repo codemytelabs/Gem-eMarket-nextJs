@@ -18,8 +18,8 @@ export function PriceFields({
   label = "Price",
 }: PriceFieldsProps) {
   return (
-    <div className="grid grid-cols-3 gap-3">
-      <div className="col-span-2">
+    <div className="grid grid-cols-1 min-[425px]:grid-cols-3 gap-3">
+      <div className="min-[425px]:col-span-2">
         <Field label={label} required>
           <TextInput
             type="number"
