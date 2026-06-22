@@ -27,7 +27,7 @@ export default async function ListingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="space-y-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             My Listings
@@ -38,7 +38,7 @@ export default async function ListingsPage() {
         </div>
         <Link
           href="/dashboard/listings/new"
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
           New Listing
@@ -64,64 +64,67 @@ export default async function ListingsPage() {
               key={listing.id}
               className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 space-y-3"
             >
-              <div className="flex items-center gap-4">
-                {/* Thumbnail */}
-                <div className="w-16 h-16 shrink-0 relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
-                  {listing.images[0] ? (
-                    <Image
-                      src={listing.images[0]}
-                      alt={listing.title}
-                      fill
-                      sizes="64px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Gem className="w-6 h-6 text-gray-300" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-                      {listing.title}
-                    </p>
-                    {listing.isBoosted && (
-                      <span className="shrink-0 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                        <Zap className="w-3 h-3" /> Boosted
-                      </span>
+              <div className="flex flex-col gap-3 min-[425px]:flex-row min-[425px]:items-center min-[425px]:gap-4">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  {/* Thumbnail */}
+                  <div className="w-16 h-16 shrink-0 relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    {listing.images[0] ? (
+                      <Image
+                        src={listing.images[0]}
+                        alt={listing.title}
+                        fill
+                        sizes="64px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Gem className="w-6 h-6 text-gray-300" />
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm font-bold text-blue-600 mt-0.5">
-                    {listing.currency} {Number(listing.price).toLocaleString()}
-                  </p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        listing.status === "ACTIVE"
-                          ? "bg-green-100 text-green-700"
-                          : listing.status === "SOLD"
-                            ? "bg-gray-100 text-gray-600"
-                            : listing.status === "CHANGES_REQUESTED" ||
-                                listing.status === "REJECTED"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {listing.status.replace("_", " ")}
-                    </span>
-                    {listing.caratWeight && (
-                      <span className="text-xs text-gray-400">
-                        {Number(listing.caratWeight)} ct
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                        {listing.title}
+                      </p>
+                      {listing.isBoosted && (
+                        <span className="shrink-0 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                          <Zap className="w-3 h-3" /> Boosted
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-bold text-blue-600 mt-0.5">
+                      {listing.currency}{" "}
+                      {Number(listing.price).toLocaleString()}
+                    </p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          listing.status === "ACTIVE"
+                            ? "bg-green-100 text-green-700"
+                            : listing.status === "SOLD"
+                              ? "bg-gray-100 text-gray-600"
+                              : listing.status === "CHANGES_REQUESTED" ||
+                                  listing.status === "REJECTED"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {listing.status.replace("_", " ")}
                       </span>
-                    )}
+                      {listing.caratWeight && (
+                        <span className="text-xs text-gray-400">
+                          {Number(listing.caratWeight)} ct
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center justify-end gap-2 shrink-0 min-[425px]:justify-start">
                   <Link
                     href={`/listings/${listing.slug}`}
                     target="_blank"

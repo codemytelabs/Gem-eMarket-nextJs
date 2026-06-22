@@ -46,7 +46,13 @@ const navItems = [
   },
 ];
 
-export function DashboardNav() {
+export function DashboardNav({
+  onNavigate,
+  collapsed = false,
+}: {
+  onNavigate?: () => void;
+  collapsed?: boolean;
+}) {
   const pathname = usePathname();
 
   return (
@@ -57,7 +63,11 @@ export function DashboardNav() {
           <Link
             key={href}
             href={href}
+            onClick={onNavigate}
+            title={collapsed ? label : undefined}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors group ${
+              collapsed ? "justify-center" : ""
+            } ${
               isActive
                 ? "bg-white/10 text-white"
                 : "text-gray-400 hover:bg-white/5 hover:text-white"
@@ -70,8 +80,8 @@ export function DashboardNav() {
                   : "text-gray-500 group-hover:text-gray-300"
               }`}
             />
-            <span>{label}</span>
-            {isActive && (
+            {!collapsed && <span>{label}</span>}
+            {!collapsed && isActive && (
               <ChevronRight className="w-3.5 h-3.5 ml-auto text-gray-500" />
             )}
           </Link>

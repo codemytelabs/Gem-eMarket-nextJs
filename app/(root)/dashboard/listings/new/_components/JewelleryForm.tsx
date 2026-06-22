@@ -14,6 +14,7 @@ import { ReelUploader } from "./shared/ReelUploader";
 import { CertificationUploader } from "./shared/CertificationUploader";
 import { LocationField } from "./shared/LocationField";
 import { PriceFields } from "./shared/PriceFields";
+import { ContactPreferenceFields } from "./shared/ContactPreferenceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
@@ -29,6 +30,7 @@ interface JewelleryFormProps {
   sellerLocation?: string;
   sellerCountry?: string;
   sellerPhone?: string;
+  sellerWhatsapp?: string;
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
@@ -41,6 +43,8 @@ export function JewelleryForm({
   onSuccess,
   sellerLocation = "",
   sellerCountry = "LK",
+  sellerPhone = "",
+  sellerWhatsapp = "",
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
@@ -73,6 +77,13 @@ export function JewelleryForm({
   const [currency, setCurrency] = useState("USD");
   const [isWholesale, setIsWholesale] = useState(false);
 
+  const [contactPhone, setContactPhone] = useState(sellerPhone);
+  const [hideContactPhone, setHideContactPhone] = useState(false);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(
+    Boolean(sellerWhatsapp),
+  );
+  const [whatsappNumber, setWhatsappNumber] = useState(sellerWhatsapp);
+
   const { submit, loading, error, fieldErrors } = useCreateListing(onSuccess);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,6 +112,10 @@ export function JewelleryForm({
       price: price ? Number(price) : undefined,
       currency,
       isWholesale,
+      contactPhone: contactPhone || undefined,
+      hideContactPhone,
+      whatsappEnabled,
+      whatsappNumber: whatsappEnabled ? whatsappNumber || undefined : undefined,
     });
   };
 
@@ -136,6 +151,7 @@ export function JewelleryForm({
         max={imageLimit.max}
         isPlanLimited={imageLimit.isPlanLimited}
         label="Jewellery Photos"
+        required={!reelUrl}
       />
 
       <ReelUploader
@@ -298,6 +314,19 @@ export function JewelleryForm({
         onChange={setIsWholesale}
         label="List as wholesale"
         hint="For bulk or trade buyers."
+      />
+
+      <ContactPreferenceFields
+        contactPhone={contactPhone}
+        onContactPhoneChange={setContactPhone}
+        hideContactPhone={hideContactPhone}
+        onHideContactPhoneChange={setHideContactPhone}
+        whatsappEnabled={whatsappEnabled}
+        onWhatsappEnabledChange={setWhatsappEnabled}
+        whatsappNumber={whatsappNumber}
+        onWhatsappNumberChange={setWhatsappNumber}
+        contactPhoneError={fieldErrors.contactPhone}
+        whatsappNumberError={fieldErrors.whatsappNumber}
       />
 
       <SubmitBar loading={loading} error={error} onBack={onBack} />

@@ -1,9 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Play } from "lucide-react";
 import { cldTransform } from "@/lib/cloudinary-url";
+
+const SLIDESHOW_INTERVAL_MS = 3000;
 
 export function ThumbnailMedia({
   images,
@@ -19,6 +21,25 @@ export function ThumbnailMedia({
   className?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  const startSlideshow = () => {
+    if (images.length <= 1 || intervalRef.current) return;
+    intervalRef.current = setInterval(() => {
+      setSlideIndex((i) => (i + 1) % images.length);
+    }, SLIDESHOW_INTERVAL_MS);
+  };
+
+  const stopSlideshow = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setSlideIndex(0);
+  };
+
+  useEffect(() => () => stopSlideshow(), []);
 
   if (reelUrl) {
     return (
@@ -51,15 +72,31 @@ export function ThumbnailMedia({
 
   if (images[0]) {
     return (
-      <div className="absolute inset-0 skeleton-shimmer">
+      <div
+        className="absolute inset-0 skeleton-shimmer"
+        onMouseEnter={startSlideshow}
+        onMouseLeave={stopSlideshow}
+      >
         <Image
-          src={cldTransform(images[0], transform)}
+          src={cldTransform(images[slideIndex] ?? images[0], transform)}
           alt={alt}
           fill
           unoptimized
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className={`object-cover ${className ?? ""}`}
         />
+        {images.length > 1 && (
+          <div className="absolute bottom-1.5 left-1.5 right-1.5 flex gap-1 pointer-events-none">
+            {images.map((_, i) => (
+              <div
+                key={i}
+                className={`h-0.5 flex-1 rounded-full transition-colors ${
+                  i === slideIndex ? "bg-white" : "bg-white/40"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   }

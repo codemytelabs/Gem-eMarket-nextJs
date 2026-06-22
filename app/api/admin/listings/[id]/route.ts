@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { invalidateCache } from "@/lib/redis";
 import { adminListingActionSchema } from "@/lib/validations/listing";
+import { createNotification } from "@/lib/messaging/server";
 
 export async function PATCH(
   req: NextRequest,
@@ -40,9 +41,42 @@ export async function PATCH(
     data:
       parsed.data.action === "approve"
         ? { status: "ACTIVE", rejectionReason: null }
-        : { status: "CHANGES_REQUESTED", rejectionReason: parsed.data.reason },
+        : {
+            status:
+              parsed.data.action === "reject"
+                ? "REJECTED"
+                : "CHANGES_REQUESTED",
+            rejectionReason: parsed.data.reason,
+          },
   });
 
   await invalidateCache(`listings:*`);
+
+  await createNotification(
+    parsed.data.action === "approve"
+      ? {
+          userId: existing.sellerId,
+          type: "listing_approved",
+          title: "Listing approved",
+          body: `"${existing.title}" is now live on the marketplace.`,
+          link: "/dashboard/listings",
+        }
+      : parsed.data.action === "reject"
+        ? {
+            userId: existing.sellerId,
+            type: "listing_rejected",
+            title: "Listing rejected",
+            body: `"${existing.title}" — ${parsed.data.reason}`,
+            link: "/dashboard/listings",
+          }
+        : {
+            userId: existing.sellerId,
+            type: "listing_changes_requested",
+            title: "Changes requested",
+            body: `"${existing.title}" — ${parsed.data.reason}`,
+            link: "/dashboard/listings",
+          },
+  ).catch(() => {});
+
   return NextResponse.json(updated);
 }

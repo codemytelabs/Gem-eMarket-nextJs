@@ -7,6 +7,7 @@ import { ImageUploader } from "./shared/ImageUploader";
 import { ReelUploader } from "./shared/ReelUploader";
 import { LocationField } from "./shared/LocationField";
 import { PriceFields } from "./shared/PriceFields";
+import { ContactPreferenceFields } from "./shared/ContactPreferenceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
@@ -24,6 +25,7 @@ interface ServiceFormProps {
   sellerLocation?: string;
   sellerCountry?: string;
   sellerPhone?: string;
+  sellerWhatsapp?: string;
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
@@ -36,6 +38,8 @@ export function ServiceForm({
   onSuccess,
   sellerLocation = "",
   sellerCountry = "LK",
+  sellerPhone = "",
+  sellerWhatsapp = "",
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
@@ -59,6 +63,13 @@ export function ServiceForm({
   const [worldwide, setWorldwide] = useState(false);
   const [areaInput, setAreaInput] = useState("");
   const [serviceAreas, setServiceAreas] = useState<string[]>([]);
+
+  const [contactPhone, setContactPhone] = useState(sellerPhone);
+  const [hideContactPhone, setHideContactPhone] = useState(false);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(
+    Boolean(sellerWhatsapp),
+  );
+  const [whatsappNumber, setWhatsappNumber] = useState(sellerWhatsapp);
 
   const { submit, loading, error, fieldErrors } = useCreateListing(onSuccess);
 
@@ -106,6 +117,10 @@ export function ServiceForm({
       currentLocation: currentLocation || undefined,
       serviceArea,
       isWholesale: false,
+      contactPhone: contactPhone || undefined,
+      hideContactPhone,
+      whatsappEnabled,
+      whatsappNumber: whatsappEnabled ? whatsappNumber || undefined : undefined,
     });
   };
 
@@ -146,6 +161,7 @@ export function ServiceForm({
         max={imageLimit.max}
         isPlanLimited={imageLimit.isPlanLimited}
         label="Portfolio / Sample Photos"
+        required={!reelUrl}
       />
 
       <ReelUploader
@@ -303,6 +319,19 @@ export function ServiceForm({
           </div>
         )}
       </div>
+
+      <ContactPreferenceFields
+        contactPhone={contactPhone}
+        onContactPhoneChange={setContactPhone}
+        hideContactPhone={hideContactPhone}
+        onHideContactPhoneChange={setHideContactPhone}
+        whatsappEnabled={whatsappEnabled}
+        onWhatsappEnabledChange={setWhatsappEnabled}
+        whatsappNumber={whatsappNumber}
+        onWhatsappNumberChange={setWhatsappNumber}
+        contactPhoneError={fieldErrors.contactPhone}
+        whatsappNumberError={fieldErrors.whatsappNumber}
+      />
 
       <SubmitBar
         loading={loading}

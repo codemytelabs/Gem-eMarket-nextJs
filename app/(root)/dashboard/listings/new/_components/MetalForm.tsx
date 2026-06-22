@@ -14,6 +14,7 @@ import { ReelUploader } from "./shared/ReelUploader";
 import { CertificationUploader } from "./shared/CertificationUploader";
 import { LocationField } from "./shared/LocationField";
 import { PriceFields } from "./shared/PriceFields";
+import { ContactPreferenceFields } from "./shared/ContactPreferenceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
@@ -30,6 +31,8 @@ interface MetalFormProps {
   onSuccess: () => void;
   sellerLocation?: string;
   sellerCountry?: string;
+  sellerPhone?: string;
+  sellerWhatsapp?: string;
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
@@ -42,6 +45,8 @@ export function MetalForm({
   onSuccess,
   sellerLocation = "",
   sellerCountry = "LK",
+  sellerPhone = "",
+  sellerWhatsapp = "",
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
@@ -72,6 +77,13 @@ export function MetalForm({
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [isWholesale, setIsWholesale] = useState(false);
+
+  const [contactPhone, setContactPhone] = useState(sellerPhone);
+  const [hideContactPhone, setHideContactPhone] = useState(false);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(
+    Boolean(sellerWhatsapp),
+  );
+  const [whatsappNumber, setWhatsappNumber] = useState(sellerWhatsapp);
 
   const { submit, loading, error, fieldErrors } = useCreateListing(onSuccess);
 
@@ -118,6 +130,10 @@ export function MetalForm({
       price: price ? Number(price) : undefined,
       currency,
       isWholesale,
+      contactPhone: contactPhone || undefined,
+      hideContactPhone,
+      whatsappEnabled,
+      whatsappNumber: whatsappEnabled ? whatsappNumber || undefined : undefined,
     });
   };
 
@@ -160,6 +176,7 @@ export function MetalForm({
         max={imageLimit.max}
         isPlanLimited={imageLimit.isPlanLimited}
         label="Photos"
+        required={!reelUrl}
       />
 
       <ReelUploader
@@ -325,6 +342,19 @@ export function MetalForm({
         onChange={setIsWholesale}
         label="List as wholesale"
         hint="Visible to bulk buyers and dealers looking for stock."
+      />
+
+      <ContactPreferenceFields
+        contactPhone={contactPhone}
+        onContactPhoneChange={setContactPhone}
+        hideContactPhone={hideContactPhone}
+        onHideContactPhoneChange={setHideContactPhone}
+        whatsappEnabled={whatsappEnabled}
+        onWhatsappEnabledChange={setWhatsappEnabled}
+        whatsappNumber={whatsappNumber}
+        onWhatsappNumberChange={setWhatsappNumber}
+        contactPhoneError={fieldErrors.contactPhone}
+        whatsappNumberError={fieldErrors.whatsappNumber}
       />
 
       <SubmitBar loading={loading} error={error} onBack={onBack} />
