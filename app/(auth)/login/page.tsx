@@ -10,6 +10,15 @@ import { colors } from "@/lib/theme/colors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+// Different parts of the app link to /login with either ?next= (e.g. the
+// navbar's "Sell" link, EnquiryModal, MessageSellerButton) or ?callbackUrl=
+// (the proxy.ts middleware redirect) — read both so neither path silently
+// drops the user's intended destination.
+function getRedirectTarget(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("next") ?? params.get("callbackUrl");
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -18,6 +27,9 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<
+    "google" | "facebook" | null
+  >(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +50,10 @@ export default function LoginPage() {
 
       const session = await getSession();
       const role = session?.user?.role;
-      const params = new URLSearchParams(window.location.search);
-      const callbackUrl = params.get("callbackUrl");
+      const redirectTarget = getRedirectTarget();
 
-      if (callbackUrl) {
-        router.push(callbackUrl);
+      if (redirectTarget) {
+        router.push(redirectTarget);
       } else if (role === "ADMIN") {
         router.push("/admin");
       } else if (role === "SELLER") {
@@ -56,6 +67,11 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSocialSignIn = (provider: "google" | "facebook") => {
+    setSocialLoading(provider);
+    signIn(provider, { callbackUrl: getRedirectTarget() ?? "/" });
   };
 
   return (
@@ -178,9 +194,10 @@ export default function LoginPage() {
             variant="primary"
             fullWidth
             isLoading={loading}
+            disabled={socialLoading !== null}
             leftIcon={<Lock className="h-5 w-5" />}
           >
-            Sign in
+            {loading ? "Signing in…" : "Sign in"}
           </Button>
         </form>
 
@@ -199,8 +216,12 @@ export default function LoginPage() {
         {/* Social Login Buttons */}
         <div className="flex flex-col space-y-3">
           <Button
+            type="button"
             variant="outline"
             fullWidth
+            isLoading={socialLoading === "google"}
+            disabled={socialLoading !== null}
+            onClick={() => handleSocialSignIn("google")}
             leftIcon={
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                 <path
@@ -226,8 +247,12 @@ export default function LoginPage() {
           </Button>
 
           <Button
+            type="button"
             variant="outline"
             fullWidth
+            isLoading={socialLoading === "facebook"}
+            disabled={socialLoading !== null}
+            onClick={() => handleSocialSignIn("facebook")}
             leftIcon={
               <svg
                 className="h-5 w-5 text-blue-600"

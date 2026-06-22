@@ -11,8 +11,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { COUNTRIES, getDialCode } from "@/lib/utils/countries";
 
+// Mirrors the same lookup on the login page — different links into /register
+// use either ?next= or ?callbackUrl=, so honor both.
+function getRedirectTarget(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("next") ?? params.get("callbackUrl");
+}
+
 export default function RegisterPage() {
   const router = useRouter();
+  const [socialLoading, setSocialLoading] = useState<
+    "google" | "facebook" | null
+  >(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("LK");
@@ -83,7 +93,7 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/");
+      router.push(getRedirectTarget() ?? "/");
       router.refresh();
     } catch (err) {
       setError(
@@ -94,6 +104,11 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSocialSignIn = (provider: "google" | "facebook") => {
+    setSocialLoading(provider);
+    signIn(provider, { callbackUrl: getRedirectTarget() ?? "/" });
   };
 
   return (
@@ -337,9 +352,10 @@ export default function RegisterPage() {
             variant="primary"
             fullWidth
             isLoading={loading}
+            disabled={socialLoading !== null}
             leftIcon={<UserPlus className="h-5 w-5" />}
           >
-            Create Account
+            {loading ? "Creating account…" : "Create Account"}
           </Button>
         </form>
 
@@ -356,8 +372,12 @@ export default function RegisterPage() {
         {/* Social Buttons */}
         <div className="flex flex-col space-y-3">
           <Button
+            type="button"
             variant="outline"
             fullWidth
+            isLoading={socialLoading === "google"}
+            disabled={socialLoading !== null}
+            onClick={() => handleSocialSignIn("google")}
             leftIcon={
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                 <path
@@ -383,8 +403,12 @@ export default function RegisterPage() {
           </Button>
 
           <Button
+            type="button"
             variant="outline"
             fullWidth
+            isLoading={socialLoading === "facebook"}
+            disabled={socialLoading !== null}
+            onClick={() => handleSocialSignIn("facebook")}
             leftIcon={
               <svg
                 className="h-5 w-5 text-blue-600"
