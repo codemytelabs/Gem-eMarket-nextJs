@@ -94,19 +94,31 @@ export function Toggle({
   hint?: string;
 }) {
   return (
-    <label className="flex items-start gap-3 cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-      />
-      <span>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div className="flex items-start justify-between gap-3">
+      <span className="min-w-0">
+        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
         </span>
-        {hint && <span className="block text-xs text-gray-400">{hint}</span>}
+        {hint && (
+          <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>
+        )}
       </span>
-    </label>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+          checked ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-700"
+        }`}
+      >
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+            checked ? "translate-x-5" : "translate-x-0.5"
+          }`}
+        />
+      </button>
+    </div>
   );
 }

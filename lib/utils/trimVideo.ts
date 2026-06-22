@@ -7,13 +7,27 @@ export function isTrimSupported(): boolean {
   );
 }
 
+const MIN_BITRATE = 4_000_000;
+const MAX_BITRATE = 12_000_000;
+
+// MediaRecorder's default bitrate is well below what phone cameras record
+// at, which is why trimmed clips looked noticeably worse than the original
+// even though the upload itself is untouched — this estimates a bitrate
+// from the actual resolution instead of taking the browser's default.
+function estimateBitrate(width: number, height: number): number {
+  const bitsPerPixelPerFrame = 0.12;
+  const assumedFps = 30;
+  const estimate = width * height * assumedFps * bitsPerPixelPerFrame;
+  return Math.min(MAX_BITRATE, Math.max(MIN_BITRATE, Math.round(estimate)));
+}
+
 // Re-encodes a window of the source video in-browser (via captureStream +
 // MediaRecorder) so only the trimmed clip is ever uploaded — the original,
 // untrimmed file never leaves the browser.
 export function trimVideoFile(
   file: File,
   startTime: number,
-  clipDuration = 10,
+  clipDuration = 15,
 ): Promise<File> {
   return new Promise((resolve, reject) => {
     if (!isTrimSupported()) {
@@ -36,7 +50,14 @@ export function trimVideoFile(
       const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
         ? "video/webm;codecs=vp9"
         : "video/webm";
-      const recorder = new MediaRecorder(stream, { mimeType });
+      const videoBitsPerSecond = estimateBitrate(
+        video.videoWidth || 720,
+        video.videoHeight || 1280,
+      );
+      const recorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond,
+      });
       const chunks: BlobPart[] = [];
 
       recorder.ondataavailable = (e) => {

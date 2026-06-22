@@ -21,6 +21,7 @@ interface NewListingWizardProps {
   sellerLocation?: string;
   sellerCountry?: string;
   sellerPhone?: string;
+  sellerWhatsapp?: string;
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
@@ -32,6 +33,7 @@ export function NewListingWizard({
   sellerLocation = "",
   sellerCountry = "LK",
   sellerPhone = "",
+  sellerWhatsapp = "",
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
@@ -53,6 +55,7 @@ export function NewListingWizard({
     sellerLocation,
     sellerCountry,
     sellerPhone,
+    sellerWhatsapp,
     canUploadReels,
     reelsRemaining,
     reelsMaxPerMonth,

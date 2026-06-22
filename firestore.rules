@@ -1,0 +1,25 @@
+rules_version = '2';
+
+// Read-only from the client. Every write (create conversation, send message,
+// mark read, create notification) goes through Next.js API routes using the
+// Admin SDK, which bypasses these rules — so there is nothing to allow here.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /conversations/{conversationId} {
+      allow read: if request.auth != null
+        && request.auth.uid in resource.data.participants;
+      allow write: if false;
+
+      match /messages/{messageId} {
+        allow read: if request.auth != null
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        allow write: if false;
+      }
+    }
+
+    match /notifications/{userId}/items/{notificationId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+  }
+}
