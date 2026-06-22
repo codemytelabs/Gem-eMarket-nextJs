@@ -13,6 +13,9 @@ interface ImageUploaderProps {
   label?: string;
   isPlanLimited?: boolean;
   upgradeHref?: string;
+  // Whether at least one photo is required — false when a reel/video has
+  // already been uploaded, since that covers the "at least one media" rule.
+  required?: boolean;
 }
 
 export function ImageUploader({
@@ -22,6 +25,7 @@ export function ImageUploader({
   label = "Photos",
   isPlanLimited = false,
   upgradeHref = "/dashboard/upgrade",
+  required = true,
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -55,12 +59,17 @@ export function ImageUploader({
   };
 
   return (
-    <div>
+    <div className="px-2">
       <label className={labelClass}>
-        {label} <span className="text-red-500">*</span>
+        {label} {required && <span className="text-red-500">*</span>}
         <span className="ml-1 text-xs text-gray-400 font-normal">
           ({images.length}/{max})
         </span>
+        {!required && (
+          <span className="ml-1 text-xs text-gray-400 font-normal">
+            — optional, you&apos;ve already added a video
+          </span>
+        )}
       </label>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
@@ -91,7 +100,7 @@ export function ImageUploader({
         ))}
 
         {images.length < max && (
-          <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors">
+          <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors p-2">
             {uploading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (

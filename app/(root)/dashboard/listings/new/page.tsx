@@ -52,6 +52,7 @@ export default async function NewListingPage() {
           sellerLocation={seller?.locationCity ?? ""}
           sellerCountry={seller?.country ?? "LK"}
           sellerPhone={seller?.phone ?? seller?.whatsappNumber ?? ""}
+          sellerWhatsapp={seller?.whatsappNumber ?? ""}
           canUploadReels={reelQuota.allowed}
           reelsRemaining={reelQuota.remaining}
           reelsMaxPerMonth={reelQuota.maxPerMonth}

@@ -86,7 +86,7 @@ export function CertificationUploader({
   };
 
   return (
-    <div>
+    <div className="px-2">
       <label className={labelClass}>{label}</label>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
@@ -129,7 +129,7 @@ export function CertificationUploader({
         ))}
 
         {images.length < max && (
-          <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-green-400 hover:text-green-500 transition-colors">
+          <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-green-400 hover:text-green-500 transition-colors p-2">
             {uploading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (

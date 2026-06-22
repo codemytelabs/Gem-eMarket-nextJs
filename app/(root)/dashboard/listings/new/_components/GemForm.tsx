@@ -14,6 +14,7 @@ import { ReelUploader } from "./shared/ReelUploader";
 import { CertificationUploader } from "./shared/CertificationUploader";
 import { LocationField } from "./shared/LocationField";
 import { PriceFields } from "./shared/PriceFields";
+import { ContactPreferenceFields } from "./shared/ContactPreferenceFields";
 import { SubmitBar } from "./shared/SubmitBar";
 import { useCreateListing } from "./shared/useCreateListing";
 import { COUNTRIES } from "@/lib/utils/countries";
@@ -29,6 +30,7 @@ interface GemFormProps {
   sellerLocation?: string;
   sellerCountry?: string;
   sellerPhone?: string;
+  sellerWhatsapp?: string;
   canUploadReels: boolean;
   reelsRemaining: number | null;
   reelsMaxPerMonth: number | null;
@@ -42,6 +44,7 @@ export function GemForm({
   sellerLocation = "",
   sellerCountry = "LK",
   sellerPhone = "",
+  sellerWhatsapp = "",
   canUploadReels,
   reelsRemaining,
   reelsMaxPerMonth,
@@ -83,6 +86,10 @@ export function GemForm({
 
   const [contactPhone, setContactPhone] = useState(sellerPhone);
   const [hideContactPhone, setHideContactPhone] = useState(false);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(
+    Boolean(sellerWhatsapp),
+  );
+  const [whatsappNumber, setWhatsappNumber] = useState(sellerWhatsapp);
 
   const { submit, loading, error, fieldErrors } = useCreateListing(onSuccess);
 
@@ -118,6 +125,8 @@ export function GemForm({
       isWholesale,
       contactPhone: contactPhone || undefined,
       hideContactPhone,
+      whatsappEnabled,
+      whatsappNumber: whatsappEnabled ? whatsappNumber || undefined : undefined,
     });
   };
 
@@ -160,6 +169,7 @@ export function GemForm({
         max={imageLimit.max}
         isPlanLimited={imageLimit.isPlanLimited}
         label="Gem Photos"
+        required={!reelUrl}
       />
 
       <ReelUploader
@@ -265,7 +275,7 @@ export function GemForm({
               — optional
             </span>
           </p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 min-[500px]:grid-cols-3 gap-3">
             <Field label="Length">
               <TextInput
                 type="number"
@@ -286,16 +296,18 @@ export function GemForm({
                 onChange={(e) => setDimW(e.target.value)}
               />
             </Field>
-            <Field label="Height / Depth">
-              <TextInput
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="H mm"
-                value={dimH}
-                onChange={(e) => setDimH(e.target.value)}
-              />
-            </Field>
+            <div className="col-span-2 min-[500px]:col-span-1">
+              <Field label="Height / Depth">
+                <TextInput
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="H mm"
+                  value={dimH}
+                  onChange={(e) => setDimH(e.target.value)}
+                />
+              </Field>
+            </div>
           </div>
           {dimL && dimW && dimH && (
             <p className="mt-1.5 text-xs text-gray-400">
@@ -411,32 +423,18 @@ export function GemForm({
         hint="Visible to bulk buyers and dealers."
       />
 
-      <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 space-y-4">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Contact Preference
-        </p>
-
-        <Field
-          label="Contact Phone"
-          name="contactPhone"
-          hint="Buyers will see this number on the listing. Leave blank to use your profile number."
-          error={fieldErrors.contactPhone}
-        >
-          <TextInput
-            type="tel"
-            placeholder="+94 77 123 4567"
-            value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value)}
-          />
-        </Field>
-
-        <Toggle
-          checked={hideContactPhone}
-          onChange={setHideContactPhone}
-          label="Hide phone number — receive enquiries through site messages only"
-          hint="Your number won't be visible on the listing. Buyers will use the enquiry form."
-        />
-      </div>
+      <ContactPreferenceFields
+        contactPhone={contactPhone}
+        onContactPhoneChange={setContactPhone}
+        hideContactPhone={hideContactPhone}
+        onHideContactPhoneChange={setHideContactPhone}
+        whatsappEnabled={whatsappEnabled}
+        onWhatsappEnabledChange={setWhatsappEnabled}
+        whatsappNumber={whatsappNumber}
+        onWhatsappNumberChange={setWhatsappNumber}
+        contactPhoneError={fieldErrors.contactPhone}
+        whatsappNumberError={fieldErrors.whatsappNumber}
+      />
 
       <SubmitBar loading={loading} error={error} onBack={onBack} />
     </form>

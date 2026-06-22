@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import Link from "next/link";
 import { formatDistanceToNow } from "@/lib/utils/date";
-import { MessageSquare, ExternalLink } from "lucide-react";
+import { MessageSquare, ExternalLink, MessageCircle } from "lucide-react";
 
 export const metadata = { title: "Enquiries" };
 
@@ -74,28 +74,41 @@ export default async function EnquiriesPage() {
                     {enquiry.message}
                   </p>
                   <div className="flex items-center gap-4 mt-3 text-sm">
-                    <a
-                      href={`tel:${enquiry.buyerPhone}`}
-                      className="text-blue-600 hover:underline font-medium"
-                    >
-                      📞 {enquiry.buyerPhone}
-                    </a>
-                    {enquiry.buyerEmail && (
-                      <a
-                        href={`mailto:${enquiry.buyerEmail}`}
-                        className="text-blue-600 hover:underline"
+                    {enquiry.conversationId && (
+                      <Link
+                        href={`/messages/${enquiry.conversationId}`}
+                        className="flex items-center gap-1.5 text-blue-600 hover:underline font-medium"
                       >
-                        ✉ {enquiry.buyerEmail}
-                      </a>
+                        <MessageCircle className="w-4 h-4" />
+                        View Chat →
+                      </Link>
                     )}
-                    <a
-                      href={`https://wa.me/${enquiry.buyerPhone.replace(/\D/g, "")}?text=Hi ${enquiry.buyerName}, thank you for your enquiry on GemCeylon!`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-green-600 hover:underline"
-                    >
-                      WhatsApp →
-                    </a>
+                    {enquiry.buyerPhone && (
+                      <>
+                        <a
+                          href={`tel:${enquiry.buyerPhone}`}
+                          className="text-blue-600 hover:underline font-medium"
+                        >
+                          📞 {enquiry.buyerPhone}
+                        </a>
+                        {enquiry.buyerEmail && (
+                          <a
+                            href={`mailto:${enquiry.buyerEmail}`}
+                            className="text-blue-600 hover:underline"
+                          >
+                            ✉ {enquiry.buyerEmail}
+                          </a>
+                        )}
+                        <a
+                          href={`https://wa.me/${enquiry.buyerPhone.replace(/\D/g, "")}?text=Hi ${enquiry.buyerName}, thank you for your enquiry on GemCeylon!`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:underline"
+                        >
+                          WhatsApp →
+                        </a>
+                      </>
+                    )}
                   </div>
                 </div>
                 <Link

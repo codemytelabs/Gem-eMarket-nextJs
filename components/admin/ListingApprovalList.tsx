@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Check,
   MessageSquareWarning,
+  XCircle,
   Pencil,
   Trash2,
   Eye,
@@ -40,6 +41,7 @@ interface ListingItem {
 const STATUS_TABS: { label: string; value: ListingStatus | "ALL" }[] = [
   { label: "Pending", value: "PENDING_REVIEW" },
   { label: "Changes Requested", value: "CHANGES_REQUESTED" },
+  { label: "Rejected", value: "REJECTED" },
   { label: "Active", value: "ACTIVE" },
   { label: "Sold", value: "SOLD" },
   { label: "Expired", value: "EXPIRED" },
@@ -76,6 +78,9 @@ export function ListingApprovalList({
   const [reasonModalFor, setReasonModalFor] = useState<ListingItem | null>(
     null,
   );
+  const [reasonAction, setReasonAction] = useState<
+    "request_changes" | "reject"
+  >("request_changes");
   const [reason, setReason] = useState("");
 
   const approve = async (listing: ListingItem) => {
@@ -101,7 +106,7 @@ export function ListingApprovalList({
     }
   };
 
-  const submitRequestChanges = async () => {
+  const submitReasonAction = async () => {
     if (!reasonModalFor || !reason.trim()) return;
     setPendingId(reasonModalFor.id);
     setError(null);
@@ -110,20 +115,29 @@ export function ListingApprovalList({
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "request_changes",
+          action: reasonAction,
           reason: reason.trim(),
         }),
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message ?? "Failed to request changes");
+        throw new Error(
+          data.message ??
+            (reasonAction === "reject"
+              ? "Failed to reject listing"
+              : "Failed to request changes"),
+        );
       }
       setReasonModalFor(null);
       setReason("");
       router.refresh();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to request changes",
+        err instanceof Error
+          ? err.message
+          : reasonAction === "reject"
+            ? "Failed to reject listing"
+            : "Failed to request changes",
       );
     } finally {
       setPendingId(null);
@@ -260,6 +274,7 @@ export function ListingApprovalList({
                     </button>
                     <button
                       onClick={() => {
+                        setReasonAction("request_changes");
                         setReasonModalFor(listing);
                         setReason("");
                       }}
@@ -268,6 +283,18 @@ export function ListingApprovalList({
                       className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50"
                     >
                       <MessageSquareWarning className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setReasonAction("reject");
+                        setReasonModalFor(listing);
+                        setReason("");
+                      }}
+                      disabled={pendingId === listing.id}
+                      title="Reject"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <XCircle className="w-4 h-4" />
                     </button>
                   </>
                 )}
@@ -289,18 +316,24 @@ export function ListingApprovalList({
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-5 w-full max-w-md space-y-3">
             <h3 className="font-semibold text-gray-900">
-              Request changes — {reasonModalFor.title}
+              {reasonAction === "reject" ? "Reject" : "Request changes"} —{" "}
+              {reasonModalFor.title}
             </h3>
             <p className="text-sm text-gray-500">
-              This will be shown to the seller so they can fix and resubmit the
-              listing.
+              {reasonAction === "reject"
+                ? "This permanently rejects the listing. The seller will see this reason on their dashboard."
+                : "This will be shown to the seller so they can fix and resubmit the listing."}
             </p>
             <textarea
               autoFocus
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={4}
-              placeholder="e.g. Please add at least 3 clear photos and your gem certificate."
+              placeholder={
+                reasonAction === "reject"
+                  ? "e.g. This item violates our prohibited materials policy."
+                  : "e.g. Please add at least 3 clear photos and your gem certificate."
+              }
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
             <div className="flex justify-end gap-2 pt-1">
@@ -314,11 +347,17 @@ export function ListingApprovalList({
                 Cancel
               </button>
               <button
-                onClick={submitRequestChanges}
+                onClick={submitReasonAction}
                 disabled={!reason.trim() || pendingId === reasonModalFor.id}
-                className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors disabled:opacity-50"
+                className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${
+                  reasonAction === "reject"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-orange-600 hover:bg-orange-700"
+                }`}
               >
-                Send to seller
+                {reasonAction === "reject"
+                  ? "Reject listing"
+                  : "Send to seller"}
               </button>
             </div>
           </div>

@@ -79,7 +79,7 @@ export function ListingGallery({
       </div>
 
       {media.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto py-1">
+        <div className="flex gap-2 overflow-x-auto px-1 py-1">
           {media.map((item, i) => (
             <button
               key={i}

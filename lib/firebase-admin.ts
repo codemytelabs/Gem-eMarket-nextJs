@@ -49,12 +49,38 @@ export async function sendFcmToMultiple(
   title: string,
   body: string,
   data?: Record<string, string>,
-): Promise<void> {
-  if (fcmTokens.length === 0) return;
+): Promise<{ invalidTokens: string[] }> {
+  if (fcmTokens.length === 0) return { invalidTokens: [] };
   const app = getFirebaseAdmin();
-  await app.messaging().sendEachForMulticast({
+  const result = await app.messaging().sendEachForMulticast({
     tokens: fcmTokens,
     notification: { title, body },
     data,
   });
+
+  const invalidTokens: string[] = [];
+  result.responses.forEach((res, i) => {
+    if (
+      !res.success &&
+      (res.error?.code === "messaging/invalid-registration-token" ||
+        res.error?.code === "messaging/registration-token-not-registered")
+    ) {
+      invalidTokens.push(fcmTokens[i]);
+    }
+  });
+
+  return { invalidTokens };
+}
+
+// Mints a Firebase Auth custom token for a NextAuth-authenticated user so the
+// browser can sign into Firebase Auth with the same uid as our Postgres User.id,
+// letting Firestore security rules scope reads via request.auth.uid.
+export async function mintCustomToken(uid: string): Promise<string> {
+  const app = getFirebaseAdmin();
+  return app.auth().createCustomToken(uid);
+}
+
+export function getFirestoreAdmin(): admin.firestore.Firestore {
+  const app = getFirebaseAdmin();
+  return app.firestore();
 }
