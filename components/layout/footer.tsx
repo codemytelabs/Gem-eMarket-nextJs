@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -10,8 +12,11 @@ import {
   Clock,
   ShieldCheck,
 } from "lucide-react";
+import { useSellerCta } from "@/hooks/useSellerCta";
 
 export default function Footer() {
+  const { href: sellerHref, label: sellerLabel } = useSellerCta();
+
   return (
     <footer className="bg-surface text-text border-t border-border pt-12 pb-8 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -99,10 +104,10 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="/sell"
+                  href={sellerHref}
                   className="text-premium hover:text-primary-dark"
                 >
-                  Become a Seller
+                  {sellerLabel}
                 </Link>
               </li>
             </ul>

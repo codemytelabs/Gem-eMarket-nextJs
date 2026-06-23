@@ -3,9 +3,11 @@
 import React from "react";
 import Image from "next/image";
 import { useThemeStore } from "@/store/themeStore";
+import { useSellerCta } from "@/hooks/useSellerCta";
 
 export default function About() {
   const { isDarkMode } = useThemeStore();
+  const { href: sellerHref, label: sellerLabel } = useSellerCta();
 
   return (
     <div
@@ -321,10 +323,10 @@ export default function About() {
               Join Today
             </a>
             <a
-              href="/sell"
+              href={sellerHref}
               className={`px-6 py-2 rounded-md ${isDarkMode ? "bg-gray-600 hover:bg-gray-500" : "bg-gray-200 hover:bg-gray-300"} ${isDarkMode ? "text-white" : "text-gray-800"} transition-colors`}
             >
-              Become a Seller
+              {sellerLabel}
             </a>
             <a
               href="/help-center/contact"

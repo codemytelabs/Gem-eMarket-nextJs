@@ -25,7 +25,6 @@ const staticHubs: MetadataRoute.Sitemap = [
   { url: `${BASE}/sellers`, priority: 0.8, changeFrequency: "weekly" },
   { url: `${BASE}/blogs`, priority: 0.7, changeFrequency: "weekly" },
   { url: `${BASE}/about`, priority: 0.6, changeFrequency: "monthly" },
-  { url: `${BASE}/sell`, priority: 0.8, changeFrequency: "monthly" },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

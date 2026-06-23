@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
@@ -26,6 +26,8 @@ import { categories, featuredLinks } from "@/config/const/navLinks";
 import { useThemeStore } from "@/store/themeStore";
 import { useTheme } from "next-themes";
 import { USER_ROLES } from "@/types/enums/role.enum";
+import { useSellerCta } from "@/hooks/useSellerCta";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useMessagingStore } from "@/store/messagingStore";
 import MessagesPopover from "@/components/messaging/MessagesPopover";
 import NotificationsDropdown from "@/components/messaging/NotificationsDropdown";
@@ -39,12 +41,13 @@ export default function Navigation() {
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<
     string | null
   >(null);
-  const [showSearchBar, setShowSearchBar] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const mobileProfileMenuRef = useRef<HTMLDivElement | null>(null);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
+  const mobileNotificationsRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const allCategoriesCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -73,40 +76,19 @@ export default function Navigation() {
     s.unreadNotificationsTotal(),
   );
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent): void {
-      if (
-        categoryMenuRef.current &&
-        !categoryMenuRef.current.contains(event.target as Node)
-      ) {
-        setActiveCategory(null);
-      }
-      if (
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(event.target as Node)
-      ) {
-        setIsProfileMenuOpen(false);
-      }
-      if (
-        notificationsRef.current &&
-        !notificationsRef.current.contains(event.target as Node)
-      ) {
-        closeNotificationsPanel();
-      }
-      if (
-        messagesRef.current &&
-        !messagesRef.current.contains(event.target as Node)
-      ) {
-        closeMessagesPopover();
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [closeNotificationsPanel, closeMessagesPopover]);
+  // Close dropdowns when clicking outside. The desktop and mobile bells
+  // render simultaneously (just CSS-hidden at different breakpoints), so
+  // that one passes both refs — closing only fires once the click is
+  // outside whichever of the two is actually visible.
+  useOutsideClick([categoryMenuRef], () => setActiveCategory(null));
+  useOutsideClick([profileMenuRef, mobileProfileMenuRef], () =>
+    setIsProfileMenuOpen(false),
+  );
+  useOutsideClick(
+    [notificationsRef, mobileNotificationsRef],
+    closeNotificationsPanel,
+  );
+  useOutsideClick([messagesRef], closeMessagesPopover);
 
   const changeTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -125,7 +107,19 @@ export default function Navigation() {
   };
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+    setIsMenuOpen((prev) => {
+      const next = !prev;
+      if (next) setIsProfileMenuOpen(false);
+      return next;
+    });
+  };
+
+  const toggleMobileProfileMenu = () => {
+    setIsProfileMenuOpen((prev) => {
+      const next = !prev;
+      if (next) closeMobileMenu();
+      return next;
+    });
   };
 
   const toggleCategory = (category: string) => {
@@ -138,10 +132,6 @@ export default function Navigation() {
 
   const closeDropdown = () => {
     setActiveCategory(null);
-  };
-
-  const toggleSearchBar = () => {
-    setShowSearchBar((prev) => !prev);
   };
 
   const closeMobileMenu = () => {
@@ -187,14 +177,10 @@ export default function Navigation() {
     signOut();
   };
 
-  // "Sell" link: guest → login, BUYER → seller registration, SELLER → dashboard
-  const isSeller = session?.user?.role === USER_ROLES.SELLER;
-  const sellHref = !session?.user
-    ? "/login?next=/seller-registration"
-    : isSeller
-      ? "/dashboard"
-      : "/seller-registration";
-  const sellLabel = isSeller ? "Seller Dashboard" : "Sell";
+  // "Start Selling" / "Seller Dashboard" link — shared with Footer and About
+  // so the href/label rule lives in one place (lib/seller-cta.ts). Guests
+  // land on /seller-registration too; proxy.ts redirects them to /login.
+  const { isSeller, href: sellHref, label: sellLabel } = useSellerCta();
 
   // TODO: wire to real wishlist count once the wishlist API exists
   const wishlistCount = 0;
@@ -304,6 +290,73 @@ export default function Navigation() {
     ),
   };
 
+  // Shared by the desktop and mobile profile triggers so the dropdown
+  // markup (and its "Start Selling"/"Seller Dashboard" branching) isn't
+  // duplicated between the two breakpoints.
+  const profileDropdownContent = session?.user && (
+    <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border bg-surface shadow-lg z-50 overflow-hidden">
+      <div className="border-b border-border px-4 py-3">
+        <p className="truncate text-sm font-semibold text-text">
+          {session.user.name}
+        </p>
+        <p className="truncate text-xs text-light-text">{session.user.email}</p>
+      </div>
+      <div className="py-1">
+        {session.user.role === USER_ROLES.SELLER ? (
+          <Link
+            href="/dashboard"
+            onClick={() => setIsProfileMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
+          >
+            <LayoutDashboard className="h-4 w-4 text-light-text" />
+            Seller Dashboard
+          </Link>
+        ) : (
+          <Link
+            href="/seller-registration"
+            onClick={() => setIsProfileMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-background"
+          >
+            <Store className="h-4 w-4" />
+            Start Selling
+          </Link>
+        )}
+
+        <Link
+          href="/wishlist"
+          onClick={() => setIsProfileMenuOpen(false)}
+          className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
+        >
+          <Heart className="h-4 w-4 text-premium" />
+          Saved Items
+          {wishlistCount > 0 && (
+            <span className="ml-auto rounded-full bg-premium px-1.5 py-0.5 text-xs text-white">
+              {wishlistCount}
+            </span>
+          )}
+        </Link>
+
+        <Link
+          href="/dashboard/settings"
+          onClick={() => setIsProfileMenuOpen(false)}
+          className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
+        >
+          <Settings className="h-4 w-4 text-light-text" />
+          Edit Profile
+        </Link>
+      </div>
+      <div className="border-t border-border py-1">
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 px-4 py-2 text-sm text-premium hover:bg-background"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <nav
       className={`bg-surface text-text shadow-md transition-colors duration-300`}
@@ -311,10 +364,27 @@ export default function Navigation() {
       {/* Top bar with logo, search, and utilities */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex justify-between h-16 items-center">
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full">
+          {/* Left cluster: mobile hamburger + logo. Grouped together (rather
+              than as separate flex children) so they stay adjacent instead
+              of being spread apart by justify-between. */}
+          <div className="flex items-center gap-1 min-[375px]:gap-2">
+            <button
+              onClick={toggleMenu}
+              className="md:hidden -ml-1 inline-flex items-center justify-center p-2 rounded-md text-text hover:bg-background focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 min-[375px]:gap-2"
+            >
+              <div className="relative h-9 w-9 min-[375px]:h-10 min-[375px]:w-10 flex-shrink-0 overflow-hidden rounded-full">
                 <Image
                   src="/images/blue-sapphire-gemstone-free-png.webp"
                   alt="Lumevelo"
@@ -324,7 +394,9 @@ export default function Navigation() {
                   priority
                 />
               </div>
-              <span className="font-bold text-xl text-primary">Lumevelo</span>
+              <span className="font-bold text-lg min-[375px]:text-xl text-primary">
+                Lumevelo
+              </span>
             </Link>
           </div>
 
@@ -400,71 +472,7 @@ export default function Navigation() {
                   />
                 </button>
 
-                {isProfileMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border bg-surface shadow-lg z-50 overflow-hidden">
-                    <div className="border-b border-border px-4 py-3">
-                      <p className="truncate text-sm font-semibold text-text">
-                        {session.user.name}
-                      </p>
-                      <p className="truncate text-xs text-light-text">
-                        {session.user.email}
-                      </p>
-                    </div>
-                    <div className="py-1">
-                      {session.user.role === USER_ROLES.SELLER ? (
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
-                        >
-                          <LayoutDashboard className="h-4 w-4 text-light-text" />
-                          Seller Dashboard
-                        </Link>
-                      ) : (
-                        <Link
-                          href="/seller-registration"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-background"
-                        >
-                          <Store className="h-4 w-4" />
-                          Become a Seller
-                        </Link>
-                      )}
-
-                      <Link
-                        href="/wishlist"
-                        onClick={() => setIsProfileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
-                      >
-                        <Heart className="h-4 w-4 text-premium" />
-                        Saved Items
-                        {wishlistCount > 0 && (
-                          <span className="ml-auto rounded-full bg-premium px-1.5 py-0.5 text-xs text-white">
-                            {wishlistCount}
-                          </span>
-                        )}
-                      </Link>
-
-                      <Link
-                        href="/dashboard/settings"
-                        onClick={() => setIsProfileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
-                      >
-                        <Settings className="h-4 w-4 text-light-text" />
-                        Edit Profile
-                      </Link>
-                    </div>
-                    <div className="border-t border-border py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-3 px-4 py-2 text-sm text-premium hover:bg-background"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {isProfileMenuOpen && profileDropdownContent}
               </div>
             ) : (
               <Link href="/login">
@@ -479,62 +487,47 @@ export default function Navigation() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center space-x-4">
-            {/* Search Toggle for Mobile */}
-            <button
-              onClick={toggleSearchBar}
-              className="p-1"
-              aria-label="Toggle search"
-            >
-              <Search className="h-5 w-5 text-text" />
-            </button>
+          {/* Right cluster - mobile: notifications + profile (or sign in) */}
+          <div className="md:hidden flex items-center gap-2 min-[375px]:gap-4">
+            {session?.user && (
+              <div className="relative" ref={mobileNotificationsRef}>
+                <button
+                  onClick={toggleNotificationsPanel}
+                  className="p-1 relative"
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-5 w-5 text-secondary" />
+                  {unreadNotificationsTotal > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-premium text-[10px] text-white">
+                      {unreadNotificationsTotal > 9
+                        ? "9+"
+                        : unreadNotificationsTotal}
+                    </span>
+                  )}
+                </button>
+                {isNotificationsPanelOpen && <NotificationsDropdown />}
+              </div>
+            )}
 
-            {/* Dark Mode Toggle for Mobile */}
-            <button onClick={changeTheme} className="p-1">
-              {isDarkMode ? (
-                <Sun className="h-5 w-5 text-yellow-400" />
-              ) : (
-                <Moon className="h-5 w-5 text-gray-600" />
-              )}
-            </button>
-
-            {/* Menu Toggle Button */}
-            <button
-              onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-text hover:bg-background focus:outline-none"
-            >
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
+            {session?.user ? (
+              <div className="relative" ref={mobileProfileMenuRef}>
+                <button
+                  onClick={toggleMobileProfileMenu}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"
+                  aria-label="Account menu"
+                >
+                  <User className="h-5 w-5" />
+                </button>
+                {isProfileMenuOpen && profileDropdownContent}
+              </div>
+            ) : (
+              <Link href="/login" className="p-1" aria-label="Sign in">
+                <User className="h-6 w-6 text-text" />
+              </Link>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Mobile search - toggled via the search icon */}
-      {showSearchBar && (
-        <div className="md:hidden px-4 pb-2">
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <Input
-              type="text"
-              placeholder="Search gems, jewellery, sellers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              variant={isDarkMode ? "filled" : "default"}
-              sizeVariant="md"
-              fullWidth
-              rightIcon={
-                <button type="submit">
-                  <Search className="h-5 w-5 text-primary" />
-                </button>
-              }
-            />
-          </form>
-        </div>
-      )}
 
       {/* Categories menu */}
       <div
@@ -601,7 +594,7 @@ export default function Navigation() {
               </Link>
               <Link
                 href={sellHref}
-                className={`whitespace-nowrap text-base font-medium text-light-text hover:text-text`}
+                className="whitespace-nowrap text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary-dark px-4 py-1.5 rounded-full transition-colors"
               >
                 {sellLabel}
               </Link>
@@ -636,6 +629,51 @@ export default function Navigation() {
         <div
           className={`px-2 pt-2 pb-3 shadow-inner bg-primary/5 dark:bg-background`}
         >
+          {/* Search — lives here now that the top bar is icon-only */}
+          <form onSubmit={handleSearchSubmit} className="px-1 pb-3">
+            <Input
+              type="text"
+              placeholder="Search gems, jewellery, sellers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              variant={isDarkMode ? "filled" : "default"}
+              sizeVariant="md"
+              fullWidth
+              rightIcon={
+                <button type="submit">
+                  <Search className="h-5 w-5 text-primary" />
+                </button>
+              }
+            />
+          </form>
+
+          {/* Theme toggle — moved here from the always-visible bar since it's
+              a set-once preference, not something checked frequently */}
+          <div className="flex items-center justify-between px-3 py-2 mb-2 border-b border-border pb-3">
+            <span className="text-base font-medium text-text">Dark Mode</span>
+            <button
+              onClick={changeTheme}
+              role="switch"
+              aria-checked={isDarkMode}
+              aria-label="Toggle dark mode"
+              className={`relative inline-flex h-7 w-14 shrink-0 items-center rounded-full transition-colors ${
+                isDarkMode ? "bg-gray-700" : "bg-blue-100"
+              }`}
+            >
+              <span
+                className={`absolute left-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow transform transition-transform ${
+                  isDarkMode ? "translate-x-7" : "translate-x-0"
+                }`}
+              >
+                {isDarkMode ? (
+                  <Moon className="h-3.5 w-3.5 text-indigo-600" />
+                ) : (
+                  <Sun className="h-3.5 w-3.5 text-yellow-500" />
+                )}
+              </span>
+            </button>
+          </div>
+
           {/* Mobile Category Navigation */}
           <div className="space-y-2">
             {categories.map((category) => (
@@ -719,7 +757,7 @@ export default function Navigation() {
             <Link
               href={sellHref}
               onClick={closeMobileMenu}
-              className={`block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
+              className="block mt-2 px-3 py-2 rounded-md text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary-dark text-center transition-colors"
             >
               {sellLabel}
             </Link>
@@ -750,26 +788,6 @@ export default function Navigation() {
                     </span>
                   )}
                 </Link>
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      closeMobileMenu();
-                      toggleNotificationsPanel();
-                    }}
-                    className={`flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
-                  >
-                    <Bell className="h-5 w-5 mr-2 text-secondary" />
-                    Notifications
-                    {unreadNotificationsTotal > 0 && (
-                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-premium text-xs text-white">
-                        {unreadNotificationsTotal > 9
-                          ? "9+"
-                          : unreadNotificationsTotal}
-                      </span>
-                    )}
-                  </button>
-                  {isNotificationsPanelOpen && <NotificationsDropdown />}
-                </div>
                 {session.user.role === USER_ROLES.SELLER ? (
                   <Link
                     href="/dashboard"
@@ -786,7 +804,7 @@ export default function Navigation() {
                     className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:bg-background`}
                   >
                     <Store className="h-5 w-5 mr-2" />
-                    Become a Seller
+                    Start Selling
                   </Link>
                 )}
                 <Link

@@ -22,6 +22,11 @@ export const metadata: Metadata = {
     siteName: "Lumevelo",
   },
   twitter: { card: "summary_large_image" },
+  icons: {
+    icon: "/images/blue-sapphire-gemstone-free-png.webp",
+    shortcut: "/images/blue-sapphire-gemstone-free-png.webp",
+    apple: "/images/blue-sapphire-gemstone-free-png.webp",
+  },
 };
 
 export default function RootLayout({
