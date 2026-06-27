@@ -7,9 +7,9 @@ import type { Prisma } from "@prisma/client";
 import { ShieldCheck, Store, MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Verified Sellers — Sri Lankan Gem & Jewellery Dealers | GemCeylon",
+  title: "Verified Sellers: Gem & Jewellery Dealers Worldwide | Lumevelo",
   description:
-    "Browse verified gem miners, dealers, and jewellers from Sri Lanka. Connect directly with authentic sellers.",
+    "Browse verified gem miners, dealers, and jewellers from around the world. Connect directly with authentic sellers.",
 };
 
 interface Props {
@@ -69,7 +69,7 @@ export default async function SellersPage({ searchParams }: Props) {
           </h1>
           <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             Connect directly with authenticated gem miners, dealers, and
-            jewellers from Sri Lanka.
+            jewellers from around the world.
           </p>
         </div>
 

@@ -21,7 +21,7 @@ export default function MessagesSidebar() {
         conversations={conversations}
         currentUserId={session.user.id}
         activeConversationId={params?.conversationId}
-        emptyText="No messages yet — enquiries you send or receive will show up here"
+        emptyText="No messages yet. Enquiries you send or receive will show up here"
       />
     </aside>
   );

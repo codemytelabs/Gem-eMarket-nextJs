@@ -79,7 +79,7 @@ export function ReelUploader({
     if (duration > MAX_DURATION_SECONDS) {
       if (!isTrimSupported()) {
         setError(
-          `Reel must be ${MAX_DURATION_SECONDS} seconds or shorter. Trimming isn't supported in this browser — try Chrome or Firefox, or upload a shorter clip.`,
+          `Reel must be ${MAX_DURATION_SECONDS} seconds or shorter. Trimming isn't supported in this browser. Try Chrome or Firefox, or upload a shorter clip.`,
         );
         return;
       }

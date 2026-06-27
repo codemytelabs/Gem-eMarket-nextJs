@@ -139,8 +139,8 @@ export function VideoTrimModal({
               Choose your {CLIP_DURATION}-second clip
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Drag the blue bar to pick which part of the video to use — it
-              plays live as you drag.
+              Drag the blue bar to pick which part of the video to use. It plays
+              live as you drag.
             </p>
 
             <video

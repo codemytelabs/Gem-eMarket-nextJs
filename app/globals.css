@@ -74,19 +74,19 @@ body {
 
 @keyframes shimmer {
   0% {
-    background-position: -200% 0;
+    background-position: 200% 0;
   }
   100% {
-    background-position: 200% 0;
+    background-position: -200% 0;
   }
 }
 
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    var(--color-border) 25%,
-    var(--color-background) 50%,
-    var(--color-border) 75%
+    color-mix(in srgb, var(--color-border) 80%, white 20%) 25%,
+    color-mix(in srgb, var(--color-background) 50%, white 50%) 50%,
+    color-mix(in srgb, var(--color-border) 80%, white 20%) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;

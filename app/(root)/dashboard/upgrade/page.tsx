@@ -420,7 +420,7 @@ function UpgradePageContent() {
                   ? couponResult.freeMonths && couponResult.freeMonths > 0
                     ? `${couponResult.freeMonths} free months applied!`
                     : couponResult.finalPriceUsd === 0
-                      ? "100% off — this plan is now FREE!"
+                      ? "100% off, this plan is now FREE!"
                       : `Saved LKR ${(selectedPlan.priceLkr - (couponResult.finalPriceLkr ?? 0)).toLocaleString()}`
                   : couponResult.errorMessage}
               </p>
@@ -430,7 +430,7 @@ function UpgradePageContent() {
           {/* Payment info */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3">
             <p className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-              PayHere — Secure Payment
+              PayHere: Secure Payment
             </p>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
               Visa · Mastercard · FriMi · genie · Ezcash · mCash

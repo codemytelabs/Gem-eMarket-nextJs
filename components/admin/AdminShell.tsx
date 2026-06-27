@@ -153,7 +153,7 @@ export default function AdminShell({ children }: AdminShellProps) {
                 />
               </div>
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ redirectTo: "/" })}
                 className="p-2 rounded-md"
                 style={{ color: colors.accent.premium }}
               >
@@ -188,7 +188,7 @@ export default function AdminShell({ children }: AdminShellProps) {
                 </div>
               </div>
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ redirectTo: "/" })}
                 className="flex items-center px-3 py-2 rounded-md hover:bg-red-50"
                 style={{ color: colors.accent.premium }}
               >

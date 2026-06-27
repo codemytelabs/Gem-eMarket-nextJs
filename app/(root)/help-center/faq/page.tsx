@@ -41,7 +41,7 @@ export default function FaqPage() {
     {
       question: "Does Lumevelo handle delivery or shipping of items?",
       answer:
-        "No. Lumevelo is a marketplace that connects buyers and sellers — we do not handle delivery, shipping, or courier services ourselves. Buyers and sellers arrange collection or delivery directly with each other once a deal is agreed.",
+        "No. Lumevelo is a marketplace that connects buyers and sellers. We do not handle delivery, shipping, or courier services ourselves. Buyers and sellers arrange collection or delivery directly with each other once a deal is agreed.",
     },
     {
       question: "How do payments and subscriptions work?",

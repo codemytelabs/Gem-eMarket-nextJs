@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { GEM_TYPE, TREATMENT_STATUS, CERTIFICATION_BODY } from "@/types/enums";
+import { Handshake, Tag } from "lucide-react";
+import {
+  GEM_TYPE,
+  TREATMENT_STATUS,
+  CERTIFICATION_BODY,
+  PRICING_TYPE,
+} from "@/types/enums";
 import {
   Field,
   TextInput,
@@ -82,6 +88,7 @@ export function GemForm({
 
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
+  const [negotiable, setNegotiable] = useState(true);
   const [isWholesale, setIsWholesale] = useState(false);
 
   const [contactPhone, setContactPhone] = useState(sellerPhone);
@@ -122,6 +129,7 @@ export function GemForm({
       certificationImages,
       price: price ? Number(price) : undefined,
       currency,
+      pricingType: negotiable ? PRICING_TYPE.NEGOTIABLE : undefined,
       isWholesale,
       contactPhone: contactPhone || undefined,
       hideContactPhone,
@@ -140,7 +148,7 @@ export function GemForm({
           error={fieldErrors.title}
         >
           <TextInput
-            placeholder="e.g., 3.5ct Unheated Blue Sapphire — Ratnapura"
+            placeholder="e.g., 3.5ct Unheated Blue Sapphire, Ratnapura"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -272,7 +280,7 @@ export function GemForm({
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Dimensions (mm){" "}
             <span className="text-xs text-gray-400 font-normal">
-              — optional
+              (optional)
             </span>
           </p>
           <div className="grid grid-cols-2 min-[500px]:grid-cols-3 gap-3">
@@ -320,7 +328,7 @@ export function GemForm({
       <Field
         label="Origin of Gem"
         name="gemOrigin"
-        hint="Optional — country or region where the gem was mined"
+        hint="Optional. Country or region where the gem was mined"
         error={fieldErrors.gemOrigin}
       >
         <TextInput
@@ -414,6 +422,15 @@ export function GemForm({
         currency={currency}
         onPriceChange={setPrice}
         onCurrencyChange={setCurrency}
+      />
+
+      <Toggle
+        checked={negotiable}
+        onChange={setNegotiable}
+        label="Price is negotiable"
+        hint="Buyers will see “Get a Quote” instead of a fixed price."
+        onIcon={Handshake}
+        offIcon={Tag}
       />
 
       <Toggle

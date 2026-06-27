@@ -252,7 +252,7 @@ export function SubscriptionPlans({
               Coupon{" "}
               <span className="font-mono font-semibold">{couponInfo.code}</span>{" "}
               applied
-              {couponInfo.description ? ` — ${couponInfo.description}` : ""}.
+              {couponInfo.description ? `: ${couponInfo.description}` : ""}.
               {couponInfo.billingCycle === "ANNUAL" && cycle === "MONTHLY" && (
                 <span className="block mt-1">
                   Switch to Annual billing to use this coupon.

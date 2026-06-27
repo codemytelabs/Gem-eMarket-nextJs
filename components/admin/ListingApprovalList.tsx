@@ -316,7 +316,7 @@ export function ListingApprovalList({
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-5 w-full max-w-md space-y-3">
             <h3 className="font-semibold text-gray-900">
-              {reasonAction === "reject" ? "Reject" : "Request changes"} —{" "}
+              {reasonAction === "reject" ? "Reject" : "Request changes"}:{" "}
               {reasonModalFor.title}
             </h3>
             <p className="text-sm text-gray-500">

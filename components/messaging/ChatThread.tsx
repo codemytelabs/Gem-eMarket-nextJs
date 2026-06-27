@@ -26,11 +26,15 @@ interface Props {
   // message reads as "regarding this ad", the same way a reply reads as
   // "regarding that message".
   pendingListingContext?: MessageListingContext;
+  // Pre-fills the composer (e.g. a ready-made "let's negotiate" message) —
+  // the buyer can still edit or clear it before sending, never auto-sent.
+  initialText?: string;
 }
 
 export default function ChatThread({
   conversationId,
   pendingListingContext,
+  initialText,
 }: Props) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
@@ -40,7 +44,7 @@ export default function ChatThread({
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText ?? "");
   const [sending, setSending] = useState(false);
   const [replyingTo, setReplyingTo] = useState<MessageReplyTo | null>(null);
   const [contextAttached, setContextAttached] = useState(false);

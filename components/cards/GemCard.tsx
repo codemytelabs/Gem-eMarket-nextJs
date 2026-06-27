@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck, Gem, MapPin } from "lucide-react";
 import { ThumbnailMedia } from "./ThumbnailMedia";
+import { NegotiateButton } from "@/components/listings/NegotiateButton";
 
 interface GemCardListing {
   id: string;
@@ -14,6 +15,9 @@ interface GemCardListing {
   certificationBody?: string | null;
   currency: string;
   price: unknown;
+  pricingType?: string | null;
+  whatsappEnabled?: boolean | null;
+  whatsappNumber?: string | null;
   isBoosted: boolean;
   seller: {
     name: string;
@@ -91,9 +95,27 @@ export function GemCard({ listing }: { listing: GemCardListing }) {
         </div>
 
         {/* Price */}
-        <p className="text-sm font-bold text-blue-600 mt-2">
-          {listing.currency} {Number(listing.price).toLocaleString()}
-        </p>
+        <div className="mt-2 space-y-1.5">
+          <p className="flex items-center gap-1.5 text-sm font-bold text-blue-600">
+            {listing.currency} {Number(listing.price).toLocaleString()}
+            {listing.pricingType === "Negotiable" && (
+              <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded-full">
+                Negotiable
+              </span>
+            )}
+          </p>
+          {listing.pricingType === "Negotiable" && (
+            <NegotiateButton
+              listingId={listing.id}
+              listingSlug={listing.slug}
+              listingTitle={listing.title}
+              whatsappNumber={
+                listing.whatsappEnabled ? listing.whatsappNumber : null
+              }
+              className="flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+            />
+          )}
+        </div>
       </div>
     </Link>
   );

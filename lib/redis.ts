@@ -36,6 +36,21 @@ export async function setCached<T>(
   await redis.set(key, value, { ex: ttlSeconds });
 }
 
+// Read-through cache: returns the cached value if present, otherwise runs
+// fetcher(), caches the result, and returns it.
+export async function getOrSetCached<T>(
+  key: string,
+  ttlSeconds: number,
+  fetcher: () => Promise<T>,
+): Promise<T> {
+  const cached = await getCached<T>(key);
+  if (cached !== null) return cached;
+
+  const fresh = await fetcher();
+  await setCached(key, fresh, ttlSeconds);
+  return fresh;
+}
+
 // Plain keys are deleted directly. Keys containing "*" are treated as a
 // pattern: DEL doesn't support globs, so matching keys are found via SCAN
 // first, then deleted.

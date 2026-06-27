@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   Package,
@@ -18,7 +19,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ welcome?: string }>;
 }) {
   const session = await auth();
-  if (!session) return null;
+  if (!session) redirect("/login");
   const { welcome } = await searchParams;
 
   const [activeListings, totalEnquiries, unreadEnquiries, subscription] =
@@ -90,8 +91,8 @@ export default async function DashboardPage({
             Welcome to your Seller Dashboard! 🎉
           </h2>
           <p className="text-blue-100 text-sm">
-            Your seller account is live. Start by creating your first listing —
-            it only takes a couple of minutes.
+            Your seller account is live. Start by creating your first listing.
+            It only takes a couple of minutes.
           </p>
           <Link
             href="/dashboard/listings/new"
@@ -185,7 +186,7 @@ export default async function DashboardPage({
                 Your shop profile is live
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                gemceylon.com/shop/{session.user.shopSlug}
+                lumevelo.com/shop/{session.user.shopSlug}
               </p>
             </div>
             <Link
