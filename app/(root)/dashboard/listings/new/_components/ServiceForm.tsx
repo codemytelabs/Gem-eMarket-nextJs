@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Handshake, Tag } from "lucide-react";
 import { SERVICE_TYPE, PRICING_TYPE } from "@/types/enums";
-import { Field, TextInput, TextArea, SelectInput } from "./shared/FormFields";
+import {
+  Field,
+  TextInput,
+  TextArea,
+  SelectInput,
+  Toggle,
+} from "./shared/FormFields";
 import { ImageUploader } from "./shared/ImageUploader";
 import { ReelUploader } from "./shared/ReelUploader";
 import { LocationField } from "./shared/LocationField";
@@ -54,7 +61,7 @@ export function ServiceForm({
   const [images, setImages] = useState<string[]>([]);
   const [reelUrl, setReelUrl] = useState("");
   const [serviceType, setServiceType] = useState("");
-  const [pricingType, setPricingType] = useState(PRICING_TYPE.FIXED);
+  const [pricingType, setPricingType] = useState(PRICING_TYPE.NEGOTIABLE);
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [turnaroundTime, setTurnaroundTime] = useState("");
@@ -172,46 +179,25 @@ export function ServiceForm({
         maxPerMonth={reelsMaxPerMonth}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field
-          label="Service Type"
-          name="serviceType"
+      <Field
+        label="Service Type"
+        name="serviceType"
+        required
+        error={fieldErrors.serviceType}
+      >
+        <SelectInput
+          value={serviceType}
+          onChange={(e) => setServiceType(e.target.value)}
           required
-          error={fieldErrors.serviceType}
         >
-          <SelectInput
-            value={serviceType}
-            onChange={(e) => setServiceType(e.target.value)}
-            required
-          >
-            <option value="">Select service type</option>
-            {Object.values(SERVICE_TYPE).map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-
-        <Field
-          label="Pricing Type"
-          name="pricingType"
-          required
-          error={fieldErrors.pricingType}
-        >
-          <SelectInput
-            value={pricingType}
-            onChange={(e) => setPricingType(e.target.value as PRICING_TYPE)}
-            required
-          >
-            {Object.values(PRICING_TYPE).map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </SelectInput>
-        </Field>
-      </div>
+          <option value="">Select service type</option>
+          {Object.values(SERVICE_TYPE).map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </SelectInput>
+      </Field>
 
       <PriceFields
         price={price}
@@ -221,10 +207,42 @@ export function ServiceForm({
         label={priceLabel[pricingType as PRICING_TYPE] ?? "Price"}
       />
 
+      <Toggle
+        checked={pricingType === PRICING_TYPE.NEGOTIABLE}
+        onChange={(checked) =>
+          setPricingType(checked ? PRICING_TYPE.NEGOTIABLE : PRICING_TYPE.FIXED)
+        }
+        label="Price is negotiable"
+        hint="Buyers will see “Get a Quote” instead of a fixed price."
+        onIcon={Handshake}
+        offIcon={Tag}
+      />
+
+      {pricingType !== PRICING_TYPE.NEGOTIABLE && (
+        <Field
+          label="Pricing Structure"
+          name="pricingType"
+          error={fieldErrors.pricingType}
+        >
+          <SelectInput
+            value={pricingType}
+            onChange={(e) => setPricingType(e.target.value as PRICING_TYPE)}
+          >
+            {Object.values(PRICING_TYPE)
+              .filter((p) => p !== PRICING_TYPE.NEGOTIABLE)
+              .map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+          </SelectInput>
+        </Field>
+      )}
+
       <Field
         label="Typical Turnaround Time"
         name="turnaroundTime"
-        hint="Optional — give buyers an idea of lead time"
+        hint="Optional. Give buyers an idea of lead time"
         error={fieldErrors.turnaroundTime}
       >
         <TextInput
@@ -260,7 +278,7 @@ export function ServiceForm({
             className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Worldwide — I can serve clients globally
+            Worldwide: I can serve clients globally
           </span>
         </label>
 

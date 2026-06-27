@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       activated: true,
-      message: `${plan.displayName} plan activated${freeMonths > 0 ? ` for ${freeMonths + 1} months` : ""} — enjoy!`,
+      message: `${plan.displayName} plan activated${freeMonths > 0 ? ` for ${freeMonths + 1} months` : ""}. Enjoy!`,
     });
   }
 
@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
   const [firstName, ...rest] = seller.name.split(" ");
   const formData = buildPayhereFormData({
     orderId,
-    items: `GemCeylon ${plan.displayName} Plan`,
+    items: `Lumevelo ${plan.displayName} Plan`,
     amountLkr: finalPriceLkr,
     firstName,
     lastName: rest.join(" ") || "-",

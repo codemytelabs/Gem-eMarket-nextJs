@@ -82,17 +82,39 @@ export function SelectInput(
   );
 }
 
+const TOGGLE_TRACK_COLOR = {
+  blue: "bg-blue-600",
+  green: "bg-green-600",
+} as const;
+
+const TOGGLE_ICON_COLOR = {
+  blue: "text-blue-600",
+  green: "text-green-600",
+} as const;
+
 export function Toggle({
   checked,
   onChange,
   label,
   hint,
+  onIcon: OnIcon,
+  offIcon: OffIcon,
+  color = "blue",
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
   hint?: string;
+  // Optional icons rendered inside the sliding thumb itself (matching the
+  // light/dark mode switch in the mobile nav) instead of a plain circle.
+  onIcon?: React.ComponentType<{ className?: string }>;
+  offIcon?: React.ComponentType<{ className?: string }>;
+  // Lets a toggle whose "on" state has its own brand association (e.g.
+  // WhatsApp) use that color instead of the default blue.
+  color?: keyof typeof TOGGLE_TRACK_COLOR;
 }) {
+  const hasIcons = OnIcon && OffIcon;
+
   return (
     <div className="flex items-start justify-between gap-3">
       <span className="min-w-0">
@@ -109,15 +131,24 @@ export function Toggle({
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
-          checked ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-700"
-        }`}
+        className={`relative inline-flex shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+          hasIcons ? "h-7 w-14" : "h-6 w-11"
+        } ${checked ? TOGGLE_TRACK_COLOR[color] : "bg-gray-300 dark:bg-gray-700"}`}
       >
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0.5"
+          className={`inline-flex items-center justify-center transform rounded-full bg-white shadow transition-transform ${
+            hasIcons
+              ? `h-6 w-6 ${checked ? "translate-x-7" : "translate-x-0.5"}`
+              : `h-5 w-5 ${checked ? "translate-x-5" : "translate-x-0.5"}`
           }`}
-        />
+        >
+          {hasIcons &&
+            (checked ? (
+              <OnIcon className={`h-3.5 w-3.5 ${TOGGLE_ICON_COLOR[color]}`} />
+            ) : (
+              <OffIcon className="h-3.5 w-3.5 text-gray-500" />
+            ))}
+        </span>
       </button>
     </div>
   );

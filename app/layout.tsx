@@ -8,11 +8,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: {
-    default: "Lumevelo — Global Gem & Jewellery Marketplace",
+    default: "Lumevelo: Global Gem & Jewellery Marketplace",
     template: "%s | Lumevelo",
   },
   description:
-    "Lumevelo is a global online marketplace for certified gems, precious metals, and fine jewellery — connecting buyers and verified sellers worldwide, anytime.",
+    "Lumevelo is a global online marketplace for certified gems, precious metals, and fine jewellery, connecting buyers and verified sellers worldwide, anytime.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "https://lumevelo.com",
   ),

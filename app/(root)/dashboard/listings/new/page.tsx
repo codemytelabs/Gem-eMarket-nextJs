@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { NewListingWizard } from "./_components/NewListingWizard";
 import { getReelQuotaStatus } from "@/lib/reelQuota";
 
-export const metadata: Metadata = { title: "New Listing — Dashboard" };
+export const metadata: Metadata = { title: "New Listing" };
 
 export default async function NewListingPage() {
   const session = await auth();

@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
 import SettingsForm from "./_components/SettingsForm";
 import { getSellerPlanName } from "@/lib/getSellerPlanName";
 
@@ -7,7 +8,7 @@ export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const session = await auth();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   const planName = await getSellerPlanName(session.user.id);
 

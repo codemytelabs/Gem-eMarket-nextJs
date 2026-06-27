@@ -83,15 +83,16 @@ export default function RegisterPage() {
         return;
       }
 
+      // No trailing router.refresh(): push already fetches the destination
+      // page's server data, and loading stays true so the button doesn't
+      // flash back to normal during the navigation gap.
       router.push("/");
-      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
           : "Something went wrong. Please try again.",
       );
-    } finally {
       setLoading(false);
     }
   };

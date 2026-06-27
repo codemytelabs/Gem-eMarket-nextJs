@@ -178,7 +178,7 @@ export default function Footer() {
               <li className="flex">
                 <Clock className="h-5 w-5 text-light-text mr-2 flex-shrink-0" />
                 <span className="text-light-text">
-                  Online marketplace — available 24/7
+                  Online marketplace, available 24/7
                 </span>
               </li>
             </ul>

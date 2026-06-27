@@ -174,7 +174,11 @@ export default function Navigation() {
 
   const handleLogout = () => {
     setIsProfileMenuOpen(false);
-    signOut();
+    // No redirectTo would default to the current page (window.location.href)
+    // — on a protected page like /dashboard, that meant logging out just
+    // landed you right back where middleware would otherwise have to
+    // re-redirect you away from. Send straight to a safe public page.
+    signOut({ redirectTo: "/" });
   };
 
   // "Start Selling" / "Seller Dashboard" link — shared with Footer and About
