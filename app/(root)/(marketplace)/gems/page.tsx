@@ -1,15 +1,18 @@
 export const dynamic = "force-dynamic";
+import { Suspense } from "react";
 import { db } from "@/lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
-import { Gem, Sparkles, Shield, Award } from "lucide-react";
+import { Gem, Sparkles, Shield, Globe2, Award } from "lucide-react";
 import { GemCard } from "@/components/cards";
+import { ListingCardSkeleton } from "@/components/cards/CardSkeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata: Metadata = {
-  title: "Ceylon Gems — Buy Certified Sapphires, Rubies & More",
+  title: "Certified Gemstones: Sapphires, Rubies & Rare Gems | Lumevelo",
   description:
-    "Browse certified Ceylon sapphires, rubies, cat's eye, and rare gems directly from verified Sri Lankan miners and dealers.",
+    "Browse certified sapphires, rubies, cat's eye, and rare gemstones from verified sellers worldwide.",
 };
 
 interface Props {
@@ -66,94 +69,22 @@ export default async function GemsPage({ searchParams }: Props) {
     return qs ? `/gems?${qs}` : "/gems";
   };
 
-  const [listings, total] = await Promise.all([
-    db.listing.findMany({
-      where,
-      include: {
-        seller: {
-          select: {
-            name: true,
-            isVerified: true,
-            locationCity: true,
-            subscription: { select: { plan: { select: { name: true } } } },
-          },
-        },
-      },
-      orderBy: [
-        { isBoosted: "desc" },
-        { isFeaturedHomepage: "desc" },
-        { createdAt: "desc" },
-      ],
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    db.listing.count({ where }),
-  ]);
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {/* Hero */}
+        {/* Hero — static, renders immediately, no DB dependency */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
-            Ceylon <span className="text-blue-600">Gemstones</span>
+            Certified <span className="text-blue-600">Gemstones</span>
           </h1>
           <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             Certified sapphires, rubies, cat&apos;s eye and rare gems from
-            verified Sri Lankan miners and dealers.
+            verified sellers around the world.
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            {
-              label: "Active Gems",
-              value: total.toLocaleString(),
-              icon: Sparkles,
-              color: "text-blue-600",
-              bg: "bg-blue-50 dark:bg-blue-900/20",
-            },
-            {
-              label: "Certified",
-              value: "GIA / AGL",
-              icon: Shield,
-              color: "text-green-600",
-              bg: "bg-green-50 dark:bg-green-900/20",
-            },
-            {
-              label: "Sri Lanka Origin",
-              value: "100%",
-              icon: Gem,
-              color: "text-purple-600",
-              bg: "bg-purple-50 dark:bg-purple-900/20",
-            },
-            {
-              label: "Verified Sellers",
-              value: "Trusted",
-              icon: Award,
-              color: "text-amber-600",
-              bg: "bg-amber-50 dark:bg-amber-900/20",
-            },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4"
-            >
-              <div
-                className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center mb-2`}
-              >
-                <s.icon className={`w-4 h-4 ${s.color}`} />
-              </div>
-              <p className="text-lg font-bold text-gray-900 dark:text-white">
-                {s.value}
-              </p>
-              <p className="text-xs text-gray-500">{s.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Price range filter */}
+        {/* Price range filter — only needs the URL params already resolved
+            above, no DB dependency, renders immediately */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mr-1">
             Price:
@@ -184,60 +115,197 @@ export default async function GemsPage({ searchParams }: Props) {
           )}
         </div>
 
-        {/* Results */}
-        <div className="flex items-center justify-between mb-5">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {total.toLocaleString()} gem{total !== 1 ? "s" : ""} found
-            {q ? ` for "${q}"` : ""}
-          </p>
-          <Link href="/gems" className="text-sm text-blue-600 hover:underline">
-            Clear filters
-          </Link>
-        </div>
-
-        {listings.length === 0 ? (
-          <div className="text-center py-20">
-            <Gem className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No gems found</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {listings.map((listing) => (
-              <GemCard key={listing.id} listing={listing} />
-            ))}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {total > limit && (
-          <div className="flex justify-center gap-2 mt-8">
-            {(() => {
-              const base = priceTierHref(minPrice, maxPrice);
-              const sep = base.includes("?") ? "&" : "?";
-              return (
-                <>
-                  {page > 1 && (
-                    <Link
-                      href={`${base}${sep}page=${page - 1}`}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      ← Previous
-                    </Link>
-                  )}
-                  {page * limit < total && (
-                    <Link
-                      href={`${base}${sep}page=${page + 1}`}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      Next →
-                    </Link>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        )}
+        <Suspense fallback={<GemsResultsSkeleton />}>
+          <GemsResults
+            where={where}
+            page={page}
+            limit={limit}
+            q={q}
+            minPrice={minPrice}
+            maxPrice={maxPrice}
+            priceTierHref={priceTierHref}
+          />
+        </Suspense>
       </div>
     </div>
+  );
+}
+
+async function GemsResults({
+  where,
+  page,
+  limit,
+  q,
+  minPrice,
+  maxPrice,
+  priceTierHref,
+}: {
+  where: Prisma.ListingWhereInput;
+  page: number;
+  limit: number;
+  q?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  priceTierHref: (min?: number, max?: number) => string;
+}) {
+  const [listings, total] = await Promise.all([
+    db.listing.findMany({
+      where,
+      include: {
+        seller: {
+          select: {
+            name: true,
+            isVerified: true,
+            locationCity: true,
+            subscription: { select: { plan: { select: { name: true } } } },
+          },
+        },
+      },
+      orderBy: [
+        { isBoosted: "desc" },
+        { isFeaturedHomepage: "desc" },
+        { createdAt: "desc" },
+      ],
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    db.listing.count({ where }),
+  ]);
+
+  const stats = [
+    {
+      label: "Active Gems",
+      value: total.toLocaleString(),
+      icon: Sparkles,
+      color: "text-blue-600",
+      bg: "bg-blue-50 dark:bg-blue-900/20",
+    },
+    {
+      label: "Certified",
+      value: "GIA / AGL",
+      icon: Shield,
+      color: "text-green-600",
+      bg: "bg-green-50 dark:bg-green-900/20",
+    },
+    {
+      label: "Global Reach",
+      value: "Worldwide",
+      icon: Globe2,
+      color: "text-purple-600",
+      bg: "bg-purple-50 dark:bg-purple-900/20",
+    },
+    {
+      label: "Verified Sellers",
+      value: "Trusted",
+      icon: Award,
+      color: "text-amber-600",
+      bg: "bg-amber-50 dark:bg-amber-900/20",
+    },
+  ];
+
+  return (
+    <>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {stats.map((s) => (
+          <div
+            key={s.label}
+            className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4"
+          >
+            <div
+              className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center mb-2`}
+            >
+              <s.icon className={`w-4 h-4 ${s.color}`} />
+            </div>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">
+              {s.value}
+            </p>
+            <p className="text-xs text-gray-500">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Results */}
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {total.toLocaleString()} gem{total !== 1 ? "s" : ""} found
+          {q ? ` for "${q}"` : ""}
+        </p>
+        <Link href="/gems" className="text-sm text-blue-600 hover:underline">
+          Clear filters
+        </Link>
+      </div>
+
+      {listings.length === 0 ? (
+        <div className="text-center py-20">
+          <Gem className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500">No gems found</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {listings.map((listing) => (
+            <GemCard key={listing.id} listing={listing} />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {total > limit && (
+        <div className="flex justify-center gap-2 mt-8">
+          {(() => {
+            const base = priceTierHref(minPrice, maxPrice);
+            const sep = base.includes("?") ? "&" : "?";
+            return (
+              <>
+                {page > 1 && (
+                  <Link
+                    href={`${base}${sep}page=${page - 1}`}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    ← Previous
+                  </Link>
+                )}
+                {page * limit < total && (
+                  <Link
+                    href={`${base}${sep}page=${page + 1}`}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    Next →
+                  </Link>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      )}
+    </>
+  );
+}
+
+function GemsResultsSkeleton() {
+  return (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4"
+          >
+            <Skeleton className="w-8 h-8 rounded-lg mb-2" />
+            <Skeleton className="h-5 w-16 mb-1.5" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between mb-5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-20" />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <ListingCardSkeleton key={i} />
+        ))}
+      </div>
+    </>
   );
 }

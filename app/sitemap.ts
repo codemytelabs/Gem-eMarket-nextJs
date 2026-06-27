@@ -3,29 +3,17 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://gemceylon.com";
+const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://lumevelo.com";
 
 const staticHubs: MetadataRoute.Sitemap = [
   { url: `${BASE}/`, priority: 1.0, changeFrequency: "daily" },
-  { url: `${BASE}/metal-prices`, priority: 0.9, changeFrequency: "hourly" },
   { url: `${BASE}/gems`, priority: 1.0, changeFrequency: "daily" },
-  {
-    url: `${BASE}/gems/ceylon-sapphire`,
-    priority: 1.0,
-    changeFrequency: "daily",
-  },
-  { url: `${BASE}/gems/natural-ruby`, priority: 0.9, changeFrequency: "daily" },
-  {
-    url: `${BASE}/gems/catseye-chrysoberyl`,
-    priority: 0.9,
-    changeFrequency: "daily",
-  },
   { url: `${BASE}/jewellery`, priority: 0.9, changeFrequency: "daily" },
   { url: `${BASE}/precious-metals`, priority: 0.9, changeFrequency: "daily" },
+  { url: `${BASE}/services`, priority: 0.8, changeFrequency: "daily" },
   { url: `${BASE}/sellers`, priority: 0.8, changeFrequency: "weekly" },
   { url: `${BASE}/blogs`, priority: 0.7, changeFrequency: "weekly" },
   { url: `${BASE}/about`, priority: 0.6, changeFrequency: "monthly" },
-  { url: `${BASE}/sell`, priority: 0.8, changeFrequency: "monthly" },
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

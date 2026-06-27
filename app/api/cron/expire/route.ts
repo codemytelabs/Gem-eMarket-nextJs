@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
       try {
         await sendEmail({
           to: sub.seller.email,
-          subject: "Your GemCeylon subscription has expired",
+          subject: "Your Lumevelo subscription has expired",
           html: `
             <h2>Subscription Expired</h2>
             <p>Hi ${escapeHtml(sub.seller.name)},</p>
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
               Renew Now
             </a>
             <p style="color:#6b7280;font-size:12px;margin-top:16px;">
-              GemCeylon — Sri Lanka&apos;s Gem &amp; Jewellery Marketplace
+              Lumevelo: The Global Gem &amp; Jewellery Marketplace
             </p>
           `,
         });
@@ -123,7 +123,7 @@ export async function GET(req: NextRequest) {
     try {
       await sendEmail({
         to: sub.seller.email,
-        subject: `Your GemCeylon ${sub.plan.displayName} plan expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+        subject: `Your Lumevelo ${sub.plan.displayName} plan expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
         html: `
           <h2>Subscription Renewal Reminder</h2>
           <p>Hi ${escapeHtml(sub.seller.name)},</p>
@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
           <p>Renew now to keep your listings active and avoid interruption.</p>
           <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/upgrade"
              style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">
-            Renew — LKR ${Number(sub.plan.priceLkr).toLocaleString()}/mo
+            Renew for LKR ${Number(sub.plan.priceLkr).toLocaleString()}/mo
           </a>
         `,
       });

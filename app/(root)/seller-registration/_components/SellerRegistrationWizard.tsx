@@ -304,7 +304,7 @@ export function SellerRegistrationWizard({
                   Your Details
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Pre-filled from your account — confirm or update below.
+                  Pre-filled from your account. Confirm or update below.
                 </p>
               </div>
 
@@ -463,7 +463,7 @@ export function SellerRegistrationWizard({
                     ))}
                     <li className="flex items-start gap-1.5 text-xs text-gray-400 mt-2">
                       <span className="text-gray-300 font-bold mt-0.5">–</span>
-                      No shop page — buyers can&apos;t browse all your items
+                      No shop page, so buyers can&apos;t browse all your items
                       together
                     </li>
                     <li className="flex items-start gap-1.5 text-xs text-gray-400">
@@ -528,12 +528,12 @@ export function SellerRegistrationWizard({
                     ))}
                     <li className="flex items-start gap-1.5 text-xs text-gray-400 mt-2">
                       <span className="text-gray-300 font-bold mt-0.5">–</span>
-                      Individual listings not indexed in standard search —
+                      Individual listings not indexed in standard search, so
                       buyers reach you through your shop
                     </li>
                     <li className="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
                       <Sparkles className="w-3 h-3 mt-0.5 shrink-0" />
-                      Requires Pro or Dealer plan — you&apos;ll choose a plan
+                      Requires Pro or Dealer plan. You&apos;ll choose a plan
                       next
                     </li>
                   </ul>
@@ -712,7 +712,7 @@ export function SellerRegistrationWizard({
                   onChange={(e) => setShopBio(e.target.value)}
                   rows={3}
                   maxLength={500}
-                  placeholder="Tell buyers about your shop — your experience, sourcing story, and what makes your gems special..."
+                  placeholder="Tell buyers about your shop: your experience, sourcing story, and what makes your gems special..."
                   className="w-full border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
                 <p className="mt-1 text-xs text-gray-400 text-right">

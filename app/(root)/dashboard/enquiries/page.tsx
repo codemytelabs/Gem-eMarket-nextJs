@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "@/lib/utils/date";
 import { MessageSquare, ExternalLink, MessageCircle } from "lucide-react";
@@ -8,7 +9,7 @@ export const metadata = { title: "Enquiries" };
 
 export default async function EnquiriesPage() {
   const session = await auth();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   const enquiries = await db.enquiry.findMany({
     where: { sellerId: session.user.id },
@@ -100,7 +101,7 @@ export default async function EnquiriesPage() {
                           </a>
                         )}
                         <a
-                          href={`https://wa.me/${enquiry.buyerPhone.replace(/\D/g, "")}?text=Hi ${enquiry.buyerName}, thank you for your enquiry on GemCeylon!`}
+                          href={`https://wa.me/${enquiry.buyerPhone.replace(/\D/g, "")}?text=Hi ${enquiry.buyerName}, thank you for your enquiry on Lumevelo!`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-green-600 hover:underline"

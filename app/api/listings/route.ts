@@ -171,12 +171,12 @@ export async function POST(req: NextRequest) {
   const metaTitle =
     rest.metaTitle ??
     (rest.caratWeight && rest.gemType
-      ? `${rest.caratWeight}ct ${rest.gemType} from ${rest.gemOrigin ?? "Sri Lanka"} | GemCeylon`
-      : `${title} | GemCeylon`);
+      ? `${rest.caratWeight}ct ${rest.gemType}${rest.gemOrigin ? ` from ${rest.gemOrigin}` : ""} | Lumevelo`
+      : `${title} | Lumevelo`);
 
   const metaDescription =
     rest.metaDescription ??
-    `Buy certified ${rest.gemType ?? title} sourced from ${rest.gemOrigin ?? "Sri Lanka"}${rest.caratWeight ? `. ${rest.caratWeight} carats` : ""}${rest.certificationBody ? `, certified by ${rest.certificationBody}` : ""}. Verified Sri Lankan seller. Enquire now.`;
+    `Buy certified ${rest.gemType ?? title}${rest.gemOrigin ? ` sourced from ${rest.gemOrigin}` : ""}${rest.caratWeight ? `. ${rest.caratWeight} carats` : ""}${rest.certificationBody ? `, certified by ${rest.certificationBody}` : ""}. Verified seller. Enquire now.`;
 
   // Set expiry date from plan (null = never expires)
   let expiresAt: Date | null = null;

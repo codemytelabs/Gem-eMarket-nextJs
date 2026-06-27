@@ -6,7 +6,7 @@ import { Eye, MessageSquare, Package, TrendingUp, Lock } from "lucide-react";
 import type { Metadata } from "next";
 import { getSellerPlanName } from "@/lib/getSellerPlanName";
 
-export const metadata: Metadata = { title: "Analytics — Dashboard" };
+export const metadata: Metadata = { title: "Analytics" };
 
 function StatCard({
   icon: Icon,
@@ -198,7 +198,7 @@ export default async function AnalyticsPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-semibold text-gray-900 dark:text-white">
-              Listing Views — Last 30 Days
+              Listing Views: Last 30 Days
             </h2>
             <p className="text-xs text-gray-400 mt-0.5">
               Daily listing views tracked by the platform
@@ -237,7 +237,7 @@ export default async function AnalyticsPage() {
             </div>
           ) : (
             <div className="h-32 flex items-center justify-center text-sm text-gray-400">
-              No view data yet — views are recorded as buyers browse your
+              No view data yet. Views are recorded as buyers browse your
               listings.
             </div>
           )

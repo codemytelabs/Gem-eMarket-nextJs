@@ -76,7 +76,7 @@ export default function MessageSellerButton({
       )}
       {whatsappNumber && (
         <a
-          href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi, I saw your listing "${listingTitle}" on GemCeylon.`)}`}
+          href={`https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(`Hi, I saw your listing "${listingTitle}" on Lumevelo.`)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 py-2.5 border border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 text-sm font-semibold rounded-lg transition-colors"

@@ -98,7 +98,7 @@ export async function POST(
   const [firstName, ...rest] = seller.name.split(" ");
   const formData = buildPayhereFormData({
     orderId,
-    items: `Listing Boost — ${boostType}`,
+    items: `Listing Boost: ${boostType}`,
     amountLkr,
     firstName,
     lastName: rest.join(" ") || "-",

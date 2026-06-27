@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { GEM_TYPE, JEWELLERY_TYPE, METAL_TYPE } from "@/types/enums";
+import { Handshake, Tag } from "lucide-react";
+import {
+  GEM_TYPE,
+  JEWELLERY_TYPE,
+  METAL_TYPE,
+  PRICING_TYPE,
+} from "@/types/enums";
 import {
   Field,
   TextInput,
@@ -75,6 +81,7 @@ export function JewelleryForm({
   const [certificationImages, setCertificationImages] = useState<string[]>([]);
   const [price, setPrice] = useState("");
   const [currency, setCurrency] = useState("USD");
+  const [negotiable, setNegotiable] = useState(true);
   const [isWholesale, setIsWholesale] = useState(false);
 
   const [contactPhone, setContactPhone] = useState(sellerPhone);
@@ -111,6 +118,7 @@ export function JewelleryForm({
       certificationImages,
       price: price ? Number(price) : undefined,
       currency,
+      pricingType: negotiable ? PRICING_TYPE.NEGOTIABLE : undefined,
       isWholesale,
       contactPhone: contactPhone || undefined,
       hideContactPhone,
@@ -138,7 +146,7 @@ export function JewelleryForm({
       >
         <TextArea
           rows={4}
-          placeholder="Describe the piece — craftsmanship, gemstone details, finish, and any hallmarks..."
+          placeholder="Describe the piece: craftsmanship, gemstone details, finish, and any hallmarks..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
@@ -236,7 +244,7 @@ export function JewelleryForm({
         <Field
           label="Accent Gemstone"
           name="gemType"
-          hint="Optional — the main gem set in the piece"
+          hint="Optional. The main gem set in the piece"
           error={fieldErrors.gemType}
         >
           <SelectInput
@@ -272,7 +280,7 @@ export function JewelleryForm({
       <Field
         label="Origin"
         name="gemOrigin"
-        hint="Optional — country or region where the piece was crafted"
+        hint="Optional. Country or region where the piece was crafted"
         error={fieldErrors.gemOrigin}
       >
         <TextInput
@@ -307,6 +315,15 @@ export function JewelleryForm({
         currency={currency}
         onPriceChange={setPrice}
         onCurrencyChange={setCurrency}
+      />
+
+      <Toggle
+        checked={negotiable}
+        onChange={setNegotiable}
+        label="Price is negotiable"
+        hint="Buyers will see “Get a Quote” instead of a fixed price."
+        onIcon={Handshake}
+        offIcon={Tag}
       />
 
       <Toggle

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck, Wrench, MapPin, Clock, ArrowRight } from "lucide-react";
 import { ThumbnailMedia } from "./ThumbnailMedia";
+import { NegotiateButton } from "@/components/listings/NegotiateButton";
 
 interface ServiceCardListing {
   id: string;
@@ -16,6 +17,8 @@ interface ServiceCardListing {
   currentLocation?: string | null;
   currency: string;
   price: unknown;
+  whatsappEnabled?: boolean | null;
+  whatsappNumber?: string | null;
   isBoosted: boolean;
   seller: {
     name: string;
@@ -39,7 +42,6 @@ export function ServiceCard({ listing }: { listing: ServiceCardListing }) {
     "Starting From": "From",
     "Per Hour": "From",
     "Per Item": "Per item",
-    Negotiable: "",
     "Fixed Price": "",
   };
   const prefix = listing.pricingType
@@ -126,17 +128,32 @@ export function ServiceCard({ listing }: { listing: ServiceCardListing }) {
 
         {/* Price + CTA */}
         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
-          <p className="text-sm font-bold text-green-600">
+          <p className="flex items-center gap-1.5 text-sm font-bold text-green-600">
             {prefix && (
               <span className="font-normal text-gray-500 mr-1">{prefix}</span>
             )}
-            {listing.pricingType === "Negotiable"
-              ? "Get a quote"
-              : `${listing.currency} ${Number(listing.price).toLocaleString()}`}
+            {listing.currency} {Number(listing.price).toLocaleString()}
+            {listing.pricingType === "Negotiable" && (
+              <span className="text-[10px] font-bold uppercase tracking-wide text-green-600 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full">
+                Negotiable
+              </span>
+            )}
           </p>
-          <span className="flex items-center gap-0.5 text-xs text-green-600 font-medium group-hover:gap-1.5 transition-all">
-            Enquire <ArrowRight className="w-3 h-3" />
-          </span>
+          {listing.pricingType === "Negotiable" ? (
+            <NegotiateButton
+              listingId={listing.id}
+              listingSlug={listing.slug}
+              listingTitle={listing.title}
+              whatsappNumber={
+                listing.whatsappEnabled ? listing.whatsappNumber : null
+              }
+              className="flex items-center gap-1.5 rounded-full bg-green-50 dark:bg-green-900/30 px-2.5 py-1 text-xs font-semibold text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+            />
+          ) : (
+            <span className="flex items-center gap-0.5 text-xs text-green-600 font-medium group-hover:gap-1.5 transition-all">
+              Enquire <ArrowRight className="w-3 h-3" />
+            </span>
+          )}
         </div>
       </div>
     </Link>

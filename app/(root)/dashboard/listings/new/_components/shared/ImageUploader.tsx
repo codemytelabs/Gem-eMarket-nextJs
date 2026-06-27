@@ -67,7 +67,7 @@ export function ImageUploader({
         </span>
         {!required && (
           <span className="ml-1 text-xs text-gray-400 font-normal">
-            — optional, you&apos;ve already added a video
+            (optional, you&apos;ve already added a video)
           </span>
         )}
       </label>

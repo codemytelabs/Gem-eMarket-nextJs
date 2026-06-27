@@ -9,7 +9,7 @@ function getResend(): Resend {
   return _resend;
 }
 
-const FROM = process.env.EMAIL_FROM ?? "GemCeylon <noreply@gemceylon.com>";
+const FROM = process.env.EMAIL_FROM ?? "Lumevelo <noreply@lumevelo.com>";
 
 interface SendEmailOptions {
   to: string | string[];
@@ -37,7 +37,7 @@ export async function sendEnquiryNotification(
 ): Promise<void> {
   await sendEmail({
     to: sellerEmail,
-    subject: `New enquiry on "${listingTitle}" — GemCeylon`,
+    subject: `Lumevelo: New enquiry on "${listingTitle}"`,
     html: `
       <h2>New Enquiry</h2>
       <p>Hi ${escapeHtml(sellerName)},</p>
@@ -57,7 +57,7 @@ export async function sendSubscriptionConfirmation(
 ): Promise<void> {
   await sendEmail({
     to: email,
-    subject: `You're now on GemCeylon ${planName}`,
+    subject: `You're now on Lumevelo ${planName}`,
     html: `
       <h2>Subscription Confirmed</h2>
       <p>Hi ${escapeHtml(name)}, welcome to <strong>${escapeHtml(planName)}</strong>!</p>
@@ -82,7 +82,7 @@ export async function sendDailyMetalPriceDigest(
 
   await sendEmail({
     to: email,
-    subject: `Daily metal price update — ${new Date().toLocaleDateString()}`,
+    subject: `Daily metal price update: ${new Date().toLocaleDateString()}`,
     html: `
       <h2>Today's Metal Prices</h2>
       <p>Hi ${escapeHtml(name)},</p>
