@@ -101,7 +101,6 @@ export default function RegisterPage() {
           ? err.message
           : "Something went wrong. Please try again.",
       );
-    } finally {
       setLoading(false);
     }
   };

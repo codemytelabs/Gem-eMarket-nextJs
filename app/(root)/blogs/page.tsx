@@ -6,9 +6,9 @@ import Image from "next/image";
 import { BookOpen, Clock } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "GemCeylon Blog — Ceylon Gem Industry Insights",
+  title: "Lumevelo Blog: Gem & Jewellery Industry Insights",
   description:
-    "Expert guides on Ceylon sapphires, rubies, cat's eye, gem buying tips, and Sri Lankan gem industry news.",
+    "Expert guides on sapphires, rubies, cat's eye, gem buying tips, and global gem industry news.",
 };
 
 export default async function BlogsPage() {
@@ -29,10 +29,10 @@ export default async function BlogsPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-3">
-            GemCeylon <span className="text-blue-600">Blog</span>
+            Lumevelo <span className="text-blue-600">Blog</span>
           </h1>
           <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-            Expert guides, gem identification tips, and Sri Lankan gem industry
+            Expert guides, gem identification tips, and global gem industry
             news.
           </p>
         </div>

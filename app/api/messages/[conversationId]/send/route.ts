@@ -56,7 +56,7 @@ export async function POST(
       userId: recipientId,
       type: "message",
       title: `${session.user.name}`,
-      body: listingContext ? `Re: ${listingContext.title} — ${text}` : text,
+      body: listingContext ? `Re: ${listingContext.title}: ${text}` : text,
       link: `/messages/${conversationId}`,
       conversationId,
     });

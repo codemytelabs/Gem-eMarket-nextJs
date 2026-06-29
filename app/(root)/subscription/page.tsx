@@ -17,7 +17,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Subscription Plans",
-  description: "Compare seller subscription plans and pricing for GemCeylon.",
+  description: "Compare seller subscription plans and pricing for Lumevelo.",
 };
 
 interface Props {

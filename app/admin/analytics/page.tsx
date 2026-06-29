@@ -7,7 +7,7 @@ export default function AdminAnalyticsPage() {
   return (
     <ComingSoon
       title="Analytics"
-      description="Platform-wide analytics — traffic, conversion, and revenue trends — are coming in a future update."
+      description="Platform-wide analytics: traffic, conversion, and revenue trends are coming in a future update."
       icon={BarChart3}
     />
   );

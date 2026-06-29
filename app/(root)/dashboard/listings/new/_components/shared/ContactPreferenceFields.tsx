@@ -1,3 +1,5 @@
+import { Phone, PhoneOff } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
 import { Field, TextInput, Toggle } from "./FormFields";
 
 interface ContactPreferenceFieldsProps {
@@ -46,10 +48,12 @@ export function ContactPreferenceFields({
       </Field>
 
       <Toggle
-        checked={hideContactPhone}
-        onChange={onHideContactPhoneChange}
-        label="Hide phone number"
-        hint="Receive enquiries through site messages only — your number won't be shown."
+        checked={!hideContactPhone}
+        onChange={(checked) => onHideContactPhoneChange(!checked)}
+        label="Show phone number"
+        hint="Buyers see your number on the listing. Turn off to receive enquiries through site messages only."
+        onIcon={Phone}
+        offIcon={PhoneOff}
       />
 
       <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
@@ -58,6 +62,9 @@ export function ContactPreferenceFields({
           onChange={onWhatsappEnabledChange}
           label="Enable WhatsApp for this listing"
           hint="Show a WhatsApp button so buyers can message you directly."
+          onIcon={WhatsAppIcon}
+          offIcon={WhatsAppIcon}
+          color="green"
         />
 
         {whatsappEnabled && (

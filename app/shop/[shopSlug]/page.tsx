@@ -24,10 +24,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!seller) return { title: "Shop Not Found" };
 
   return {
-    title: seller.shopMetaTitle ?? `${seller.name} — GemCeylon Seller`,
+    title: seller.shopMetaTitle ?? `${seller.name}: Lumevelo Seller`,
     description:
       seller.shopMetaDescription ??
-      `Browse gems and jewellery from ${seller.name} on GemCeylon.`,
+      `Browse gems and jewellery from ${seller.name} on Lumevelo.`,
     openGraph: {
       title: seller.shopMetaTitle ?? seller.name,
       images: seller.shopBannerUrl ? [{ url: seller.shopBannerUrl }] : [],

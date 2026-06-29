@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import type { Metadata } from "next";
@@ -7,47 +8,18 @@ import Link from "next/link";
 import { ShieldCheck, MapPin, Clock, Globe } from "lucide-react";
 import MessageSellerButton from "./_components/MessageSellerButton";
 import { ListingGallery } from "@/components/listings/ListingGallery";
+import { NegotiateButton } from "@/components/listings/NegotiateButton";
 import { safeJsonLd } from "@/lib/utils/json-ld";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const listing = await db.listing.findUnique({
-    where: { slug },
-    select: {
-      metaTitle: true,
-      metaDescription: true,
-      images: true,
-      title: true,
-    },
-  });
-
-  if (!listing) return { title: "Not Found" };
-
-  return {
-    title: listing.metaTitle ?? listing.title,
-    description: listing.metaDescription ?? undefined,
-    openGraph: {
-      title: listing.metaTitle ?? listing.title,
-      description: listing.metaDescription ?? undefined,
-      images: listing.images[0] ? [{ url: listing.images[0] }] : [],
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: listing.metaTitle ?? listing.title,
-      description: listing.metaDescription ?? undefined,
-    },
-  };
-}
-
-export default async function ListingPage({ params }: Props) {
-  const { slug } = await params;
-
-  const listing = await db.listing.findUnique({
+// cache() dedupes this within a single request — generateMetadata and the
+// page component both need the same listing, so without this they'd issue
+// two separate round-trips to Postgres for the same row.
+const getListing = cache(async (slug: string) =>
+  db.listing.findUnique({
     where: { slug, status: "ACTIVE" },
     include: {
       seller: {
@@ -63,7 +35,46 @@ export default async function ListingPage({ params }: Props) {
         },
       },
     },
-  });
+  }),
+);
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const listing = await getListing(slug);
+
+  if (!listing) return { title: "Not Found" };
+
+  const title = listing.metaTitle ?? listing.title;
+  const description =
+    listing.metaDescription ??
+    `${listing.title} is available now on Lumevelo, the global marketplace for certified gems, jewellery, and precious metals. Message the seller directly to enquire.`;
+  const url = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://lumevelo.com"}/listings/${listing.slug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    // og:image / twitter:image come from the sibling opengraph-image.tsx
+    // file convention — it generates a branded preview without the price.
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "Lumevelo",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
+export default async function ListingPage({ params }: Props) {
+  const { slug } = await params;
+
+  const listing = await getListing(slug);
 
   if (!listing) notFound();
 
@@ -79,7 +90,7 @@ export default async function ListingPage({ params }: Props) {
     name: listing.title,
     description: listing.description,
     image: listing.images,
-    brand: { "@type": "Brand", name: "GemCeylon" },
+    brand: { "@type": "Brand", name: "Lumevelo" },
     offers: {
       "@type": "Offer",
       price: listing.price,
@@ -140,9 +151,32 @@ export default async function ListingPage({ params }: Props) {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 {listing.title}
               </h1>
-              <p className="text-3xl font-bold text-blue-600 mt-2">
-                {listing.currency} {Number(listing.price).toLocaleString()}
-              </p>
+              <div className="mt-2">
+                <p className="flex items-center gap-2 text-3xl font-bold text-blue-600">
+                  {listing.currency} {Number(listing.price).toLocaleString()}
+                  {listing.pricingType === "Negotiable" && (
+                    <span className="text-xs font-bold uppercase tracking-wide text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                      Negotiable
+                    </span>
+                  )}
+                </p>
+                {listing.pricingType === "Negotiable" && (
+                  <>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                      Price is negotiable. Message the seller for details.
+                    </p>
+                    <NegotiateButton
+                      listingId={listing.id}
+                      listingSlug={listing.slug}
+                      listingTitle={listing.title}
+                      whatsappNumber={
+                        listing.whatsappEnabled ? listing.whatsappNumber : null
+                      }
+                      className="mt-3 flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                    />
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Category-specific details */}

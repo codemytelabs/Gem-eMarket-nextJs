@@ -66,14 +66,14 @@ export async function PATCH(
             userId: existing.sellerId,
             type: "listing_rejected",
             title: "Listing rejected",
-            body: `"${existing.title}" — ${parsed.data.reason}`,
+            body: `"${existing.title}": ${parsed.data.reason}`,
             link: "/dashboard/listings",
           }
         : {
             userId: existing.sellerId,
             type: "listing_changes_requested",
             title: "Changes requested",
-            body: `"${existing.title}" — ${parsed.data.reason}`,
+            body: `"${existing.title}": ${parsed.data.reason}`,
             link: "/dashboard/listings",
           },
   ).catch(() => {});

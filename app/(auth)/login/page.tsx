@@ -45,6 +45,7 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError("Invalid email or password");
+        setLoading(false);
         return;
       }
 
@@ -52,6 +53,9 @@ export default function LoginPage() {
       const role = session?.user?.role;
       const redirectTarget = getRedirectTarget();
 
+      // router.push alone already fetches fresh server data for the
+      // destination route — a trailing router.refresh() here would just
+      // discard that fetch and re-request the same page a second time.
       if (redirectTarget) {
         router.push(redirectTarget);
       } else if (role === "ADMIN") {
@@ -61,10 +65,12 @@ export default function LoginPage() {
       } else {
         router.push("/");
       }
-      router.refresh();
+      // Leave loading=true here on purpose: the button stays disabled and
+      // spinning until the destination page actually replaces this one,
+      // instead of flashing back to its normal state during the navigation
+      // gap (the exact "re-enables, then nothing happens for a beat" UX bug).
     } catch {
       setError("Something went wrong. Please try again.");
-    } finally {
       setLoading(false);
     }
   };

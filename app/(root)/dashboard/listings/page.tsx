@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Plus, Gem, Zap, Edit, Eye, AlertTriangle } from "lucide-react";
@@ -8,7 +9,7 @@ export const metadata = { title: "My Listings" };
 
 export default async function ListingsPage() {
   const session = await auth();
-  if (!session) return null;
+  if (!session) redirect("/login");
 
   const [listings, subscription] = await Promise.all([
     db.listing.findMany({

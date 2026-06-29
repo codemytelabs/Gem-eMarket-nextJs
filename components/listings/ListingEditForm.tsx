@@ -26,7 +26,7 @@ import { LocationField } from "@/app/(root)/dashboard/listings/new/_components/s
 import { PriceFields } from "@/app/(root)/dashboard/listings/new/_components/shared/PriceFields";
 import { SubmitBar } from "@/app/(root)/dashboard/listings/new/_components/shared/SubmitBar";
 import { COUNTRIES } from "@/lib/utils/countries";
-import { X } from "lucide-react";
+import { X, Phone, PhoneOff } from "lucide-react";
 import {
   CATEGORY_IMAGE_MAX,
   CERTIFICATION_IMAGE_MAX,
@@ -836,7 +836,7 @@ export function ListingEditForm({
                 className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-sm font-medium text-gray-700">
-                Worldwide — I can serve clients globally
+                Worldwide: I can serve clients globally
               </span>
             </label>
             {!worldwide && (
@@ -921,9 +921,12 @@ export function ListingEditForm({
           />
         </Field>
         <Toggle
-          checked={hideContactPhone}
-          onChange={setHideContactPhone}
-          label="Hide phone number — receive enquiries through site messages only"
+          checked={!hideContactPhone}
+          onChange={(checked) => setHideContactPhone(!checked)}
+          label="Show phone number"
+          hint="Turn off to receive enquiries through site messages only."
+          onIcon={Phone}
+          offIcon={PhoneOff}
         />
       </div>
 

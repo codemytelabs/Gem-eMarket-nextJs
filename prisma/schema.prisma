@@ -280,6 +280,10 @@ model Listing {
   analytics   ListingView[]
   reelUploads ReelUpload[]
 
+  @@index([sellerId])
+  @@index([status, category, createdAt])
+  @@index([status, isFeaturedHomepage, isBoosted, createdAt])
+  @@index([status, createdAt])
   @@map("listings")
 }
 
@@ -334,6 +338,7 @@ model Enquiry {
   seller  User    @relation("SellerEnquiries", fields: [sellerId], references: [id])
   buyer   User?   @relation("BuyerEnquiries", fields: [buyerId], references: [id])
 
+  @@index([sellerId, isRead])
   @@map("enquiries")
 }
 
