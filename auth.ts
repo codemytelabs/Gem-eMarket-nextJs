@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import Facebook from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
@@ -18,6 +20,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
   session: { strategy: "jwt" },
   providers: [
+    // Google/Facebook both verify the email themselves before allowing
+    // sign-in, so it's safe to link a new OAuth identity onto an existing
+    // password-based account that shares the same email — without this,
+    // NextAuth refuses the link and bounces to an error page instead.
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID as string,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    Facebook({
+      clientId: process.env.AUTH_FACEBOOK_ID as string,
+      clientSecret: process.env.AUTH_FACEBOOK_SECRET as string,
+      allowDangerousEmailAccountLinking: true,
+    }),
     Credentials({
       async authorize(credentials, req) {
         const parsed = loginSchema.safeParse(credentials);
@@ -61,7 +77,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role;
         token.isVerified = user.isVerified;
         token.shopSlug = user.shopSlug;
-        token.planName = user.planName;
+        // OAuth sign-ins return the adapter's plain User row, which has no
+        // synthesized planName (that only exists for Credentials, derived
+        // from the subscription relation) — a brand-new user has no
+        // subscription row yet either way, so "free" is the correct default.
+        token.planName = user.planName ?? "free";
       }
       // Re-read from DB whenever the client calls session.update()
       if (trigger === "update") {
@@ -99,7 +119,9 @@ declare module "next-auth" {
     role: string;
     isVerified: boolean;
     shopSlug: string | null;
-    planName: string;
+    // Optional: OAuth-adapter-created users don't have this synthesized
+    // field until the jwt callback defaults it (see callbacks.jwt above).
+    planName?: string;
   }
 
   interface Session {
