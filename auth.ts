@@ -1,39 +1,25 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
-import Facebook from "next-auth/providers/facebook";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import { z } from "zod";
 import { authConfig } from "@/auth.config";
+import { loginSchema } from "@/lib/validations/auth";
 import { rateLimit } from "@/lib/redis";
 import { getClientIp } from "@/lib/utils/client-ip";
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+import { parseUserAgent } from "@/lib/device";
+import {
+  createUserSession,
+  isSessionRevoked,
+  touchUserSession,
+} from "@/lib/sessions";
+import crypto from "crypto";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(db),
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 }, // 30 days
   providers: [
-    // Google/Facebook both verify the email themselves before allowing
-    // sign-in, so it's safe to link a new OAuth identity onto an existing
-    // password-based account that shares the same email — without this,
-    // NextAuth refuses the link and bounces to an error page instead.
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID as string,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
-      allowDangerousEmailAccountLinking: true,
-    }),
-    Facebook({
-      clientId: process.env.AUTH_FACEBOOK_ID as string,
-      clientSecret: process.env.AUTH_FACEBOOK_SECRET as string,
-      allowDangerousEmailAccountLinking: true,
-    }),
     Credentials({
       async authorize(credentials, req) {
         const parsed = loginSchema.safeParse(credentials);
@@ -45,18 +31,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("Too many login attempts. Try again later.");
         }
 
-        const user = await db.user.findUnique({
-          where: { email: parsed.data.email },
-          include: { subscription: { include: { plan: true } } },
-        });
+        const { identifier, method, password } = parsed.data;
+        const user =
+          method === "phone"
+            ? await db.user.findUnique({
+                where: { phone: identifier },
+                include: { subscription: { include: { plan: true } } },
+              })
+            : await db.user.findUnique({
+                where: { email: identifier },
+                include: { subscription: { include: { plan: true } } },
+              });
 
         if (!user || !user.passwordHash) return null;
 
-        const valid = await bcrypt.compare(
-          parsed.data.password,
-          user.passwordHash,
-        );
+        const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
+
+        const ua = req.headers?.get?.("user-agent") ?? null;
+        const { deviceName, deviceType } = parseUserAgent(ua);
 
         return {
           id: user.id,
@@ -66,6 +59,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           isVerified: user.isVerified,
           shopSlug: user.shopSlug,
           planName: user.subscription?.plan.name ?? "free",
+          _deviceName: deviceName,
+          _deviceType: deviceType,
+          _ip: ip ?? null,
         };
       },
     }),
@@ -77,13 +73,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role;
         token.isVerified = user.isVerified;
         token.shopSlug = user.shopSlug;
-        // OAuth sign-ins return the adapter's plain User row, which has no
-        // synthesized planName (that only exists for Credentials, derived
-        // from the subscription relation) — a brand-new user has no
-        // subscription row yet either way, so "free" is the correct default.
         token.planName = user.planName ?? "free";
+
+        token.sessionId = crypto.randomUUID();
+        createUserSession({
+          userId: user.id as string,
+          sessionId: token.sessionId as string,
+          deviceName: (user as { _deviceName?: string })._deviceName ?? null,
+          deviceType: (user as { _deviceType?: string })._deviceType ?? null,
+          ip: (user as { _ip?: string })._ip ?? null,
+        }).catch(() => {});
       }
-      // Re-read from DB whenever the client calls session.update()
+
+      if (token.sessionId) {
+        if (await isSessionRevoked(token.sessionId as string)) return null;
+        touchUserSession(token.sessionId as string).catch(() => {});
+      }
+
       if (trigger === "update") {
         const fresh = await db.user.findUnique({
           where: { id: token.id as string },
@@ -109,6 +115,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.isVerified = token.isVerified as boolean;
       session.user.shopSlug = token.shopSlug as string | null;
       session.user.planName = token.planName as string;
+      session.user.sessionId = token.sessionId as string | undefined;
       return session;
     },
   },
@@ -119,9 +126,10 @@ declare module "next-auth" {
     role: string;
     isVerified: boolean;
     shopSlug: string | null;
-    // Optional: OAuth-adapter-created users don't have this synthesized
-    // field until the jwt callback defaults it (see callbacks.jwt above).
     planName?: string;
+    _deviceName?: string;
+    _deviceType?: string;
+    _ip?: string;
   }
 
   interface Session {
@@ -133,6 +141,7 @@ declare module "next-auth" {
       isVerified: boolean;
       shopSlug: string | null;
       planName: string;
+      sessionId?: string;
     };
   }
 }

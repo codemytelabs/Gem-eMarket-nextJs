@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, getSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { Eye, EyeOff, Lock, ChevronDown } from "lucide-react";
 import { colors } from "@/lib/theme/colors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AuthMethodSwitch } from "@/components/auth/AuthMethodSwitch";
+import { COUNTRIES, getDialCode } from "@/lib/utils/countries";
 
 // Different parts of the app link to /login with either ?next= (e.g. the
 // navbar's "Sell" link, EnquiryModal, MessageSellerButton) or ?callbackUrl=
@@ -21,30 +23,48 @@ function getRedirectTarget(): string | null {
 
 export default function LoginPage() {
   const router = useRouter();
+  const [method, setMethod] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
+  const [country, setCountry] = useState("LK");
+  const [dialCode, setDialCode] = useState("+94");
+  const [phoneLocal, setPhoneLocal] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<
-    "google" | "facebook" | null
-  >(null);
+
+  useEffect(() => {
+    const code = getDialCode(country);
+    if (code) setDialCode(code);
+  }, [country]);
+
+  const handleMethodChange = (next: "email" | "phone") => {
+    setMethod(next);
+    setError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    const identifier = method === "email" ? email : `${dialCode} ${phoneLocal}`;
+
     try {
       const result = await signIn("credentials", {
-        email,
+        identifier,
+        method,
         password,
         redirect: false,
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setError(
+          method === "email"
+            ? "Invalid email or password"
+            : "Invalid phone number or password",
+        );
         setLoading(false);
         return;
       }
@@ -73,11 +93,6 @@ export default function LoginPage() {
       setError("Something went wrong. Please try again.");
       setLoading(false);
     }
-  };
-
-  const handleSocialSignIn = (provider: "google" | "facebook") => {
-    setSocialLoading(provider);
-    signIn(provider, { callbackUrl: getRedirectTarget() ?? "/" });
   };
 
   return (
@@ -124,19 +139,56 @@ export default function LoginPage() {
             </div>
           )}
 
+          <AuthMethodSwitch value={method} onChange={handleMethodChange} />
+
           <div className="space-y-4">
-            <Input
-              label="Email Address"
-              id="email-address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              fullWidth
-            />
+            {method === "email" ? (
+              <Input
+                label="Email Address"
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                fullWidth
+              />
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Phone Number
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="h-full appearance-none border border-gray-300 rounded-lg pl-3 pr-8 py-2.5 text-sm bg-gray-50 text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {COUNTRIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.dialCode}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    autoComplete="tel"
+                    value={phoneLocal}
+                    onChange={(e) =>
+                      setPhoneLocal(e.target.value.replace(/[^0-9\s\-()]/g, ""))
+                    }
+                    placeholder="77 123 4567"
+                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
 
             <Input
               label="Password"
@@ -200,87 +252,11 @@ export default function LoginPage() {
             variant="primary"
             fullWidth
             isLoading={loading}
-            disabled={socialLoading !== null}
             leftIcon={<Lock className="h-5 w-5" />}
           >
             {loading ? "Signing in…" : "Sign in"}
           </Button>
         </form>
-
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        {/* Social Login Buttons */}
-        <div className="flex flex-col space-y-3">
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            isLoading={socialLoading === "google"}
-            disabled={socialLoading !== null}
-            onClick={() => handleSocialSignIn("google")}
-            leftIcon={
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-            }
-          >
-            Sign in with Google
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            isLoading={socialLoading === "facebook"}
-            disabled={socialLoading !== null}
-            onClick={() => handleSocialSignIn("facebook")}
-            leftIcon={
-              <svg
-                className="h-5 w-5 text-blue-600"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-                  clipRule="evenodd"
-                  fill="#1877F2"
-                />
-                <path
-                  d="M15.893 14.89l.443-2.89h-2.773v-1.876c0-.79.387-1.562 1.63-1.562h1.26v-2.46s-1.144-.195-2.238-.195c-2.285 0-3.777 1.384-3.777 3.89V12h-2.54v2.89h2.54v6.988a10.1 10.1 0 003.115 0v-6.987h2.33z"
-                  fill="white"
-                />
-              </svg>
-            }
-          >
-            Sign in with Facebook
-          </Button>
-        </div>
       </div>
     </div>
   );
