@@ -4,6 +4,11 @@ import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validations/auth";
 import { rateLimit } from "@/lib/redis";
 import { getClientIp } from "@/lib/utils/client-ip";
+import {
+  isChannelVerified,
+  clearChannelVerified,
+  normalizePhone,
+} from "@/lib/otp";
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -24,6 +29,18 @@ export async function POST(req: NextRequest) {
   const { name, email, password, phone, role, country, locationCity } =
     parsed.data;
 
+  const emailVerified = await isChannelVerified(`email:${email}`);
+  const phoneVerified = phone
+    ? await isChannelVerified(`phone:${normalizePhone(phone)}`)
+    : false;
+
+  if (!emailVerified && !phoneVerified) {
+    return NextResponse.json(
+      { message: "Please verify your email or phone number to continue" },
+      { status: 400 },
+    );
+  }
+
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json(
@@ -39,8 +56,10 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         email,
+        emailVerified: emailVerified ? new Date() : null,
         passwordHash,
         phone,
+        phoneVerified,
         role,
         country,
         locationCity,
@@ -72,6 +91,9 @@ export async function POST(req: NextRequest) {
 
     return newUser;
   });
+
+  await clearChannelVerified(`email:${email}`);
+  if (phone) await clearChannelVerified(`phone:${normalizePhone(phone)}`);
 
   return NextResponse.json(
     {

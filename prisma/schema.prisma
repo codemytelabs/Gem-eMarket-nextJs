@@ -39,6 +39,7 @@ model User {
   updatedAt           DateTime  @updatedAt
 
   subscription           SellerSubscription?
+  userSessions           UserSession[]
   listings               Listing[]
   enquiriesReceived      Enquiry[]              @relation("SellerEnquiries")
   enquiriesSent          Enquiry[]              @relation("BuyerEnquiries")
@@ -59,6 +60,23 @@ model User {
   accounts                Account[]
 
   @@map("users")
+}
+
+// ─── Active login sessions (for device management / force-logout) ─────────────
+
+model UserSession {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId  String   @unique
+  deviceName String?
+  deviceType String?
+  ip         String?
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("user_sessions")
 }
 
 // ─── OAuth linked identities (Google, Facebook, ...) ──────────────────────────

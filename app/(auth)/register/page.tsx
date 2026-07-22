@@ -1,28 +1,44 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, EyeOff, UserPlus, ChevronDown } from "lucide-react";
+import { Eye, EyeOff, UserPlus, ChevronDown, CheckCircle2 } from "lucide-react";
 import { colors } from "@/lib/theme/colors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { OtpVerifyModal } from "@/components/auth/OtpVerifyModal";
 import { COUNTRIES, getDialCode } from "@/lib/utils/countries";
 
-// Mirrors the same lookup on the login page — different links into /register
-// use either ?next= or ?callbackUrl=, so honor both.
 function getRedirectTarget(): string | null {
   const params = new URLSearchParams(window.location.search);
   return params.get("next") ?? params.get("callbackUrl");
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const fieldCls =
+  "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors";
+const fieldErrorCls = "border-red-400 focus:ring-red-400";
+const fieldVerifiedCls = "border-green-400 bg-green-50/40 focus:ring-green-400";
+
+type FieldErrors = Partial<
+  Record<
+    | "fullName"
+    | "email"
+    | "phone"
+    | "verify"
+    | "password"
+    | "confirmPassword"
+    | "terms",
+    string
+  >
+>;
+
 export default function RegisterPage() {
   const router = useRouter();
-  const [socialLoading, setSocialLoading] = useState<
-    "google" | "facebook" | null
-  >(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("LK");
@@ -34,10 +50,25 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [topError, setTopError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-  // Update dial code when country changes
+  const [verifyChannel, setVerifyChannel] = useState<"email" | "phone" | null>(
+    null,
+  );
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+
+  // Refs for scroll-to-error
+  const fullNameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const verifyCardRef = useRef<HTMLDivElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordRef = useRef<HTMLInputElement>(null);
+  const termsRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const code = getDialCode(country);
     if (code) setDialCode(code);
@@ -45,25 +76,71 @@ export default function RegisterPage() {
 
   const handleCountryChange = (code: string) => {
     setCountry(code);
-    // Clear local phone when switching country
     setPhoneLocal("");
+    setPhoneVerified(false);
   };
 
-  const fullPhone = phoneLocal ? `${dialCode} ${phoneLocal}` : undefined;
+  const clearError = (key: keyof FieldErrors) => {
+    if (fieldErrors[key]) {
+      setFieldErrors((prev) => {
+        const n = { ...prev };
+        delete n[key];
+        return n;
+      });
+    }
+  };
+
+  const fullPhone = `${dialCode} ${phoneLocal}`;
+  const isEmailValid = EMAIL_PATTERN.test(email);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    // Collect all field errors before showing any
+    const errors: FieldErrors = {};
+    if (!fullName.trim()) errors.fullName = "Full name is required";
+    if (!email.trim()) errors.email = "Email address is required";
+    else if (!isEmailValid) errors.email = "Please enter a valid email address";
+    if (!phoneLocal.trim()) errors.phone = "Phone number is required";
+    if (!emailVerified && !phoneVerified)
+      errors.verify = "Please verify your email or phone number to continue";
+    if (!password) errors.password = "Password is required";
+    else if (password.length < 8)
+      errors.password = "Password must be at least 8 characters";
+    if (!confirmPassword)
+      errors.confirmPassword = "Please confirm your password";
+    else if (password !== confirmPassword)
+      errors.confirmPassword = "Passwords do not match";
+    if (!agreeTerms)
+      errors.terms =
+        "You must agree to the Terms of Service and Privacy Policy";
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+
+      // Scroll to the first error in form order
+      const scrollOrder: {
+        key: keyof FieldErrors;
+        ref: React.RefObject<HTMLElement | null>;
+      }[] = [
+        { key: "fullName", ref: fullNameRef },
+        { key: "email", ref: emailRef },
+        { key: "phone", ref: phoneRef },
+        { key: "verify", ref: verifyCardRef },
+        { key: "password", ref: passwordRef },
+        { key: "confirmPassword", ref: confirmPasswordRef },
+        { key: "terms", ref: termsRef },
+      ];
+      const first = scrollOrder.find(({ key }) => errors[key]);
+      first?.ref.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
       return;
     }
-    if (!agreeTerms) {
-      setError("You must agree to the Terms of Service and Privacy Policy");
-      return;
-    }
 
+    setFieldErrors({});
+    setTopError("");
     setLoading(true);
     try {
       const res = await fetch("/api/auth/register", {
@@ -83,7 +160,8 @@ export default function RegisterPage() {
       if (!res.ok) throw new Error(data.message ?? "Registration failed");
 
       const result = await signIn("credentials", {
-        email,
+        identifier: email,
+        method: "email",
         password,
         redirect: false,
       });
@@ -96,7 +174,7 @@ export default function RegisterPage() {
       router.push(getRedirectTarget() ?? "/");
       router.refresh();
     } catch (err) {
-      setError(
+      setTopError(
         err instanceof Error
           ? err.message
           : "Something went wrong. Please try again.",
@@ -105,332 +183,432 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSocialSignIn = (provider: "google" | "facebook") => {
-    setSocialLoading(provider);
-    signIn(provider, { callbackUrl: getRedirectTarget() ?? "/" });
-  };
-
   return (
-    <div className="min-h-screen flex bg-[#f5f5f5] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full mx-auto space-y-8 bg-white p-8 rounded-lg shadow-lg">
-        {/* Logo & Header */}
-        <div className="text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center gap-2"
-          >
-            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full">
-              <Image
-                src="/images/blue-sapphire-gemstone-free-png.webp"
-                alt="Lumevelo"
-                fill
-                sizes="48px"
-                className="object-cover"
-              />
-            </div>
-            <span className="font-bold text-2xl text-primary">Lumevelo</span>
-          </Link>
-          <h2 className="mt-6 text-3xl font-extrabold text-[#34495e]">
-            Create your account
-          </h2>
-          <p className="mt-2 text-sm text-gray-500">
-            Or{" "}
+    <div className="min-h-screen flex items-start justify-center bg-[#f5f5f5] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md">
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          {/* Card header */}
+          <div className="px-8 pt-8 pb-6 text-center border-b border-gray-100">
             <Link
-              href="/login"
-              className="font-normal"
-              style={{ color: colors.primary.main }}
+              href="/"
+              className="inline-flex items-center justify-center gap-2.5 mb-5"
             >
-              sign in to your existing account
-            </Link>
-          </p>
-        </div>
-
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
-          {/* Full Name */}
-          <Input
-            label="Full Name"
-            id="full-name"
-            name="fullName"
-            type="text"
-            autoComplete="name"
-            required
-            placeholder="Enter your full name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            fullWidth
-          />
-
-          {/* Email */}
-          <Input
-            label="Email Address"
-            id="email-address"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            placeholder="Enter your email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            fullWidth
-          />
-
-          {/* Country */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Country
-            </label>
-            <div className="relative">
-              <select
-                value={country}
-                onChange={(e) => handleCountryChange(e.target.value)}
-                className="w-full appearance-none border border-gray-300 rounded-lg px-3 py-2.5 pr-10 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.name} ({c.dialCode})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* City / Location */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              City / Region{" "}
-              <span className="text-xs text-gray-400 font-normal">
-                optional
-              </span>
-            </label>
-            <input
-              type="text"
-              value={locationCity}
-              onChange={(e) => setLocationCity(e.target.value)}
-              placeholder={
-                country === "LK"
-                  ? "e.g. Ratnapura, Colombo, Kandy"
-                  : country === "IN"
-                    ? "e.g. Mumbai, Jaipur"
-                    : "e.g. your city or region"
-              }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Phone with dial code */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Phone Number{" "}
-              <span className="text-xs text-gray-400 font-normal">
-                optional
-              </span>
-            </label>
-            <div className="flex gap-2">
-              {/* Dial code badge — clicking it opens the country select above */}
-              <div className="flex items-center px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 whitespace-nowrap select-none">
-                {dialCode}
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                <Image
+                  src="/images/blue-sapphire-gemstone-free-png.webp"
+                  alt="Lumevelo"
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
               </div>
+              <span className="font-bold text-xl text-primary">Lumevelo</span>
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Create your account
+            </h1>
+            <p className="mt-1.5 text-sm text-gray-500">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-semibold hover:underline"
+                style={{ color: colors.primary.main }}
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
+
+          {/* Form */}
+          <form
+            className="px-8 py-7 space-y-5"
+            onSubmit={handleSubmit}
+            noValidate
+          >
+            {/* Top-level server error */}
+            {topError && (
+              <div className="flex items-start gap-2.5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                <svg
+                  className="w-4 h-4 shrink-0 mt-0.5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {topError}
+              </div>
+            )}
+
+            {/* Full Name */}
+            <div>
+              <Input
+                ref={fullNameRef}
+                label="Full Name"
+                id="full-name"
+                name="fullName"
+                type="text"
+                autoComplete="name"
+                required
+                placeholder="Enter your full name"
+                value={fullName}
+                onChange={(e) => {
+                  setFullName(e.target.value);
+                  clearError("fullName");
+                }}
+                error={!!fieldErrors.fullName}
+                fullWidth
+              />
+              {fieldErrors.fullName && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.fullName}
+                </p>
+              )}
+            </div>
+
+            {/* ── Verification card ── */}
+            <div
+              ref={verifyCardRef}
+              className="rounded-xl border border-gray-200 overflow-hidden"
+            >
+              {/* Card sub-header */}
+              <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-200">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Verify your identity
+                </p>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Verify at least one contact method to create your account
+                </p>
+              </div>
+
+              {/* Email */}
+              <div className="px-4 py-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    ref={emailRef}
+                    type="email"
+                    id="email-address"
+                    name="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailVerified(false);
+                      clearError("email");
+                      clearError("verify");
+                    }}
+                    className={`${fieldCls} ${
+                      emailVerified
+                        ? `${fieldVerifiedCls} pr-28`
+                        : fieldErrors.email
+                          ? fieldErrorCls
+                          : ""
+                    }`}
+                  />
+                  {emailVerified && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 text-xs font-semibold text-green-600 pointer-events-none">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Verified
+                    </span>
+                  )}
+                </div>
+                {fieldErrors.email && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {fieldErrors.email}
+                  </p>
+                )}
+                {!emailVerified && (
+                  <button
+                    type="button"
+                    onClick={() => setVerifyChannel("email")}
+                    disabled={!isEmailValid}
+                    className="mt-1.5 cursor-pointer text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:underline"
+                    style={{ color: colors.primary.main }}
+                  >
+                    Send verification code to this email
+                  </button>
+                )}
+              </div>
+
+              {/* OR divider */}
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50 border-y border-gray-100">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-[11px] text-gray-400 font-medium">
+                  or verify via phone
+                </span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+
+              {/* Country */}
+              <div className="px-4 pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Country
+                </label>
+                <div className="relative">
+                  <select
+                    value={country}
+                    onChange={(e) => handleCountryChange(e.target.value)}
+                    className={`${fieldCls} pr-10 appearance-none cursor-pointer`}
+                  >
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name} ({c.dialCode})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="px-4 pt-3 pb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <div className="flex items-center px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 whitespace-nowrap select-none">
+                    {dialCode}
+                  </div>
+                  <input
+                    ref={phoneRef}
+                    type="tel"
+                    value={phoneLocal}
+                    onChange={(e) => {
+                      setPhoneLocal(
+                        e.target.value.replace(/[^0-9\s\-()]/g, ""),
+                      );
+                      setPhoneVerified(false);
+                      clearError("phone");
+                      clearError("verify");
+                    }}
+                    placeholder="77 123 4567"
+                    required
+                    className={`flex-1 ${fieldCls} ${
+                      phoneVerified
+                        ? fieldVerifiedCls
+                        : fieldErrors.phone
+                          ? fieldErrorCls
+                          : ""
+                    }`}
+                  />
+                  {phoneVerified && (
+                    <div className="flex items-center gap-1 text-xs font-semibold text-green-600 whitespace-nowrap pl-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Verified
+                    </div>
+                  )}
+                </div>
+                {fieldErrors.phone && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {fieldErrors.phone}
+                  </p>
+                )}
+                {!phoneVerified && (
+                  <button
+                    type="button"
+                    onClick={() => setVerifyChannel("phone")}
+                    disabled={!phoneLocal.trim()}
+                    className="mt-1.5 cursor-pointer text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:underline"
+                    style={{ color: colors.primary.main }}
+                  >
+                    Send verification code via SMS
+                  </button>
+                )}
+              </div>
+
+              {/* Verify error — shown at bottom of card */}
+              {fieldErrors.verify && (
+                <div className="mx-4 mb-4 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-600">
+                  {fieldErrors.verify}
+                </div>
+              )}
+            </div>
+            {/* ── end verification card ── */}
+
+            {/* City / Region */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                City / Region
+                <span className="ml-1.5 text-xs font-normal text-gray-400">
+                  (optional)
+                </span>
+              </label>
               <input
-                type="tel"
-                value={phoneLocal}
-                onChange={(e) =>
-                  setPhoneLocal(e.target.value.replace(/[^0-9\s\-()]/g, ""))
+                type="text"
+                value={locationCity}
+                onChange={(e) => setLocationCity(e.target.value)}
+                placeholder={
+                  country === "LK"
+                    ? "e.g. Ratnapura, Colombo, Kandy"
+                    : country === "IN"
+                      ? "e.g. Mumbai, Jaipur"
+                      : "e.g. your city or region"
                 }
-                placeholder="77 123 4567"
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={fieldCls}
               />
             </div>
-            {phoneLocal && (
-              <p className="mt-1 text-xs text-gray-400">
-                Will be saved as: {dialCode} {phoneLocal}
-              </p>
-            )}
-          </div>
 
-          {/* Password */}
-          <Input
-            label="Password"
-            id="password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            autoComplete="new-password"
-            required
-            placeholder="Create a password"
-            helperText="Minimum 8 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            fullWidth
-            rightIcon={
-              showPassword ? (
-                <Eye
-                  className="h-5 w-5 text-gray-400 cursor-pointer"
-                  onClick={() => setShowPassword(false)}
-                />
-              ) : (
-                <EyeOff
-                  className="h-5 w-5 text-gray-400 cursor-pointer"
-                  onClick={() => setShowPassword(true)}
-                />
-              )
-            }
-          />
+            {/* Password */}
+            <div>
+              <Input
+                ref={passwordRef}
+                label="Password"
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                placeholder="Create a password"
+                helperText={
+                  !fieldErrors.password ? "Minimum 8 characters" : undefined
+                }
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearError("password");
+                  clearError("confirmPassword");
+                }}
+                error={!!fieldErrors.password}
+                fullWidth
+                rightIcon={
+                  showPassword ? (
+                    <Eye
+                      className="h-5 w-5 text-gray-400 cursor-pointer"
+                      onClick={() => setShowPassword(false)}
+                    />
+                  ) : (
+                    <EyeOff
+                      className="h-5 w-5 text-gray-400 cursor-pointer"
+                      onClick={() => setShowPassword(true)}
+                    />
+                  )
+                }
+              />
+              {fieldErrors.password && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.password}
+                </p>
+              )}
+            </div>
 
-          {/* Confirm Password */}
-          <Input
-            label="Confirm Password"
-            id="confirm-password"
-            name="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            autoComplete="new-password"
-            required
-            placeholder="Confirm your password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            error={confirmPassword ? password !== confirmPassword : undefined}
-            errorText="Passwords do not match"
-            fullWidth
-            rightIcon={
-              showConfirmPassword ? (
-                <Eye
-                  className="h-5 w-5 text-gray-400 cursor-pointer"
-                  onClick={() => setShowConfirmPassword(false)}
-                />
-              ) : (
-                <EyeOff
-                  className="h-5 w-5 text-gray-400 cursor-pointer"
-                  onClick={() => setShowConfirmPassword(true)}
-                />
-              )
-            }
-          />
+            {/* Confirm Password */}
+            <div>
+              <Input
+                ref={confirmPasswordRef}
+                label="Confirm Password"
+                id="confirm-password"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  clearError("confirmPassword");
+                }}
+                error={!!fieldErrors.confirmPassword}
+                fullWidth
+                rightIcon={
+                  showConfirmPassword ? (
+                    <Eye
+                      className="h-5 w-5 text-gray-400 cursor-pointer"
+                      onClick={() => setShowConfirmPassword(false)}
+                    />
+                  ) : (
+                    <EyeOff
+                      className="h-5 w-5 text-gray-400 cursor-pointer"
+                      onClick={() => setShowConfirmPassword(true)}
+                    />
+                  )
+                }
+              />
+              {fieldErrors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600">
+                  {fieldErrors.confirmPassword}
+                </p>
+              )}
+            </div>
 
-          {/* Terms */}
-          <div className="flex items-center">
-            <input
-              id="agree-terms"
-              name="agreeTerms"
-              type="checkbox"
-              className="h-4 w-4 rounded"
-              style={{ color: colors.primary.main }}
-              checked={agreeTerms}
-              onChange={(e) => setAgreeTerms(e.target.checked)}
-              required
-            />
-            <label
-              htmlFor="agree-terms"
-              className="ml-2 block text-sm text-gray-900"
+            {/* Terms */}
+            <div ref={termsRef}>
+              <div className="flex items-start gap-2.5">
+                <input
+                  id="agree-terms"
+                  name="agreeTerms"
+                  type="checkbox"
+                  className="h-4 w-4 rounded mt-0.5 shrink-0 cursor-pointer"
+                  style={{ accentColor: colors.primary.main }}
+                  checked={agreeTerms}
+                  onChange={(e) => {
+                    setAgreeTerms(e.target.checked);
+                    clearError("terms");
+                  }}
+                />
+                <label
+                  htmlFor="agree-terms"
+                  className="text-sm text-gray-600 leading-snug cursor-pointer"
+                >
+                  I agree to the{" "}
+                  <a
+                    href="#"
+                    className="font-semibold hover:underline"
+                    style={{ color: colors.primary.main }}
+                  >
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="#"
+                    className="font-semibold hover:underline"
+                    style={{ color: colors.primary.main }}
+                  >
+                    Privacy Policy
+                  </a>
+                </label>
+              </div>
+              {fieldErrors.terms && (
+                <p className="mt-1.5 text-xs text-red-600">
+                  {fieldErrors.terms}
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              isLoading={loading}
+              leftIcon={<UserPlus className="h-5 w-5" />}
             >
-              I agree to the{" "}
-              <a
-                href="#"
-                className="font-medium"
-                style={{ color: colors.primary.main }}
-              >
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a
-                href="#"
-                className="font-medium"
-                style={{ color: colors.primary.main }}
-              >
-                Privacy Policy
-              </a>
-            </label>
-          </div>
-
-          <Button
-            type="submit"
-            variant="primary"
-            fullWidth
-            isLoading={loading}
-            disabled={socialLoading !== null}
-            leftIcon={<UserPlus className="h-5 w-5" />}
-          >
-            {loading ? "Creating account…" : "Create Account"}
-          </Button>
-        </form>
-
-        {/* Divider */}
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or sign up with</span>
-          </div>
-        </div>
-
-        {/* Social Buttons */}
-        <div className="flex flex-col space-y-3">
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            isLoading={socialLoading === "google"}
-            disabled={socialLoading !== null}
-            onClick={() => handleSocialSignIn("google")}
-            leftIcon={
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-            }
-          >
-            Sign up with Google
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            isLoading={socialLoading === "facebook"}
-            disabled={socialLoading !== null}
-            onClick={() => handleSocialSignIn("facebook")}
-            leftIcon={
-              <svg
-                className="h-5 w-5 text-blue-600"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
-                  clipRule="evenodd"
-                  fill="#1877F2"
-                />
-                <path
-                  d="M15.893 14.89l.443-2.89h-2.773v-1.876c0-.79.387-1.562 1.63-1.562h1.26v-2.46s-1.144-.195-2.238-.195c-2.285 0-3.777 1.384-3.777 3.89V12h-2.54v2.89h2.54v6.988a10.1 10.1 0 003.115 0v-6.987h2.33z"
-                  fill="white"
-                />
-              </svg>
-            }
-          >
-            Sign up with Facebook
-          </Button>
+              {loading ? "Creating account…" : "Create Account"}
+            </Button>
+          </form>
         </div>
       </div>
+
+      {verifyChannel && (
+        <OtpVerifyModal
+          channel={verifyChannel}
+          value={verifyChannel === "email" ? email : fullPhone}
+          onClose={() => setVerifyChannel(null)}
+          onVerified={() => {
+            if (verifyChannel === "email") setEmailVerified(true);
+            else setPhoneVerified(true);
+            setVerifyChannel(null);
+            clearError("verify");
+          }}
+        />
+      )}
     </div>
   );
 }

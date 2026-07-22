@@ -28,7 +28,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseClasses =
-    "relative font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-opacity-50 flex items-center justify-center";
+    "relative font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-opacity-50 flex items-center justify-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50";
 
   const sizeClasses = {
     sm: "py-1 px-3 text-xs",
