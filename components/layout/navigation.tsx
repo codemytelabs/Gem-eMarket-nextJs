@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import {
@@ -21,7 +22,6 @@ import {
   Heart,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { categories, featuredLinks } from "@/config/const/navLinks";
 import { useThemeStore } from "@/store/themeStore";
 import { useTheme } from "next-themes";
@@ -31,8 +31,10 @@ import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useMessagingStore } from "@/store/messagingStore";
 import MessagesPopover from "@/components/messaging/MessagesPopover";
 import NotificationsDropdown from "@/components/messaging/NotificationsDropdown";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 export default function Navigation() {
+  const t = useTranslations("nav");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { isDarkMode, toggleDarkMode } = useThemeStore();
@@ -313,7 +315,7 @@ export default function Navigation() {
             className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
           >
             <LayoutDashboard className="h-4 w-4 text-light-text" />
-            Seller Dashboard
+            {t("sellerDashboard")}
           </Link>
         ) : (
           <Link
@@ -322,7 +324,7 @@ export default function Navigation() {
             className="flex items-center gap-3 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-background"
           >
             <Store className="h-4 w-4" />
-            Start Selling
+            {t("startSelling")}
           </Link>
         )}
 
@@ -332,7 +334,7 @@ export default function Navigation() {
           className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
         >
           <Heart className="h-4 w-4 text-premium" />
-          Saved Items
+          {t("savedItems")}
           {wishlistCount > 0 && (
             <span className="ml-auto rounded-full bg-premium px-1.5 py-0.5 text-xs text-white">
               {wishlistCount}
@@ -346,7 +348,7 @@ export default function Navigation() {
           className="flex items-center gap-3 px-4 py-2 text-sm text-text hover:bg-background"
         >
           <Settings className="h-4 w-4 text-light-text" />
-          Edit Profile
+          {t("editProfile")}
         </Link>
       </div>
       <div className="border-t border-border py-1">
@@ -355,7 +357,7 @@ export default function Navigation() {
           className="flex w-full items-center gap-3 px-4 py-2 text-sm text-premium hover:bg-background"
         >
           <LogOut className="h-4 w-4" />
-          Logout
+          {t("logout")}
         </button>
       </div>
     </div>
@@ -375,7 +377,7 @@ export default function Navigation() {
             <button
               onClick={toggleMenu}
               className="md:hidden -ml-1 inline-flex items-center justify-center p-2 rounded-md text-text hover:bg-background focus:outline-none"
-              aria-label="Toggle menu"
+              aria-label={t("toggleMenu")}
             >
               {isMenuOpen ? (
                 <X className="h-6 w-6" />
@@ -410,7 +412,7 @@ export default function Navigation() {
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder="Search gems, jewellery, sellers..."
+                  placeholder={t("searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   variant="filled"
@@ -427,7 +429,9 @@ export default function Navigation() {
 
           {/* Right side navigation items - hidden on mobile */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Language selector - deferred until i18n is implemented in a later phase */}
+            <LanguageSwitcher />
+
+            <div className="h-5 w-px bg-border" />
 
             {/* Dark Mode Toggle */}
             <button
@@ -446,7 +450,7 @@ export default function Navigation() {
                 <button
                   onClick={toggleNotificationsPanel}
                   className="flex items-center hover:text-gray-600 relative"
-                  aria-label="Notifications"
+                  aria-label={t("notifications")}
                 >
                   <Bell className="h-5 w-5 text-secondary" />
                   {unreadNotificationsTotal > 0 && (
@@ -479,15 +483,20 @@ export default function Navigation() {
                 {isProfileMenuOpen && profileDropdownContent}
               </div>
             ) : (
-              <Link href="/login">
-                <Button
-                  variant="primary"
-                  size="md"
-                  leftIcon={<User className="h-4 w-4" />}
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/login"
+                  className="whitespace-nowrap text-sm font-medium text-text hover:text-primary transition-colors"
                 >
-                  Sign In
-                </Button>
-              </Link>
+                  {t("signIn")}
+                </Link>
+                <Link
+                  href="/register"
+                  className="whitespace-nowrap text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-primary dark:hover:bg-primary-dark px-4 py-1.5 rounded-full transition-colors"
+                >
+                  {t("register")}
+                </Link>
+              </div>
             )}
           </div>
 
@@ -498,7 +507,7 @@ export default function Navigation() {
                 <button
                   onClick={toggleNotificationsPanel}
                   className="p-1 relative"
-                  aria-label="Notifications"
+                  aria-label={t("notifications")}
                 >
                   <Bell className="h-5 w-5 text-secondary" />
                   {unreadNotificationsTotal > 0 && (
@@ -518,14 +527,14 @@ export default function Navigation() {
                 <button
                   onClick={toggleMobileProfileMenu}
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary"
-                  aria-label="Account menu"
+                  aria-label={t("accountMenu")}
                 >
                   <User className="h-5 w-5" />
                 </button>
                 {isProfileMenuOpen && profileDropdownContent}
               </div>
             ) : (
-              <Link href="/login" className="p-1" aria-label="Sign in">
+              <Link href="/login" className="p-1" aria-label={t("signIn")}>
                 <User className="h-6 w-6 text-text" />
               </Link>
             )}
@@ -554,7 +563,7 @@ export default function Navigation() {
                       : "text-light-text hover:text-text"
                   }`}
                 >
-                  All Categories
+                  {t("allCategories")}
                   <ChevronDown
                     className={`h-4 w-4 ml-1 transform ${activeCategory === "allCategories" ? "rotate-180" : ""}`}
                   />
@@ -569,7 +578,7 @@ export default function Navigation() {
                     : "text-light-text hover:text-text"
                 }`}
               >
-                Featured
+                {t("featured")}
                 <ChevronDown
                   className={`h-4 w-4 ml-1 transform ${activeCategory === "featured" ? "rotate-180" : ""}`}
                 />
@@ -582,19 +591,19 @@ export default function Navigation() {
                 href="/about"
                 className={`whitespace-nowrap text-base font-medium text-light-text hover:text-text`}
               >
-                About
+                {t("about")}
               </Link>
               <Link
                 href="/blogs"
                 className={`whitespace-nowrap text-base font-medium text-light-text hover:text-text`}
               >
-                Blog
+                {t("blog")}
               </Link>
               <Link
                 href="/help-center/contact"
                 className={`whitespace-nowrap text-base font-medium text-light-text hover:text-text`}
               >
-                Help Center
+                {t("helpCenter")}
               </Link>
               <Link
                 href={sellHref}
@@ -651,15 +660,27 @@ export default function Navigation() {
             />
           </form>
 
+          {/* Language — moved here from the always-visible bar for the same
+              reason as the theme toggle below: a set-once preference, not
+              something checked frequently */}
+          <div className="flex items-center justify-between px-3 py-2 mb-2 border-b border-border pb-3">
+            <span className="text-base font-medium text-text">
+              {t("language")}
+            </span>
+            <LanguageSwitcher />
+          </div>
+
           {/* Theme toggle — moved here from the always-visible bar since it's
               a set-once preference, not something checked frequently */}
           <div className="flex items-center justify-between px-3 py-2 mb-2 border-b border-border pb-3">
-            <span className="text-base font-medium text-text">Dark Mode</span>
+            <span className="text-base font-medium text-text">
+              {t("darkMode")}
+            </span>
             <button
               onClick={changeTheme}
               role="switch"
               aria-checked={isDarkMode}
-              aria-label="Toggle dark mode"
+              aria-label={t("toggleDarkMode")}
               className={`relative inline-flex h-7 w-14 shrink-0 items-center rounded-full transition-colors ${
                 isDarkMode ? "bg-gray-700" : "bg-blue-100"
               }`}
@@ -724,14 +745,14 @@ export default function Navigation() {
               onClick={closeMobileMenu}
               className={`block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
             >
-              Featured
+              {t("featured")}
             </Link>
             <Link
               href="/deals"
               onClick={closeMobileMenu}
               className={`block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
             >
-              Deals
+              {t("deals")}
             </Link>
           </div>
 
@@ -742,21 +763,21 @@ export default function Navigation() {
               onClick={closeMobileMenu}
               className={`block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
             >
-              About
+              {t("about")}
             </Link>
             <Link
               href="/blogs"
               onClick={closeMobileMenu}
               className={`block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
             >
-              Blog
+              {t("blog")}
             </Link>
             <Link
               href="/help-center/contact"
               onClick={closeMobileMenu}
               className={`block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
             >
-              Help Center
+              {t("helpCenter")}
             </Link>
             <Link
               href={sellHref}
@@ -777,7 +798,7 @@ export default function Navigation() {
                   className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
                 >
                   <Heart className="h-5 w-5 mr-2 text-premium" />
-                  Saved Items
+                  {t("savedItems")}
                 </Link>
                 <Link
                   href="/messages"
@@ -785,7 +806,7 @@ export default function Navigation() {
                   className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background relative`}
                 >
                   <MessageCircle className="h-5 w-5 mr-2 text-primary" />
-                  Messages
+                  {t("messages")}
                   {unreadMessagesTotal > 0 && (
                     <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-premium text-xs text-white">
                       {unreadMessagesTotal > 9 ? "9+" : unreadMessagesTotal}
@@ -799,7 +820,7 @@ export default function Navigation() {
                     className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
                   >
                     <LayoutDashboard className="h-5 w-5 mr-2 text-light-text" />
-                    Seller Dashboard
+                    {t("sellerDashboard")}
                   </Link>
                 ) : (
                   <Link
@@ -808,7 +829,7 @@ export default function Navigation() {
                     className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:bg-background`}
                   >
                     <Store className="h-5 w-5 mr-2" />
-                    Start Selling
+                    {t("startSelling")}
                   </Link>
                 )}
                 <Link
@@ -817,7 +838,7 @@ export default function Navigation() {
                   className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
                 >
                   <Settings className="h-5 w-5 mr-2 text-light-text" />
-                  Edit Profile
+                  {t("editProfile")}
                 </Link>
                 <button
                   onClick={() => {
@@ -827,7 +848,7 @@ export default function Navigation() {
                   className={`flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-left text-premium hover:bg-background`}
                 >
                   <LogOut className="h-5 w-5 mr-2" />
-                  Logout
+                  {t("logout")}
                 </button>
               </>
             ) : (
@@ -838,14 +859,14 @@ export default function Navigation() {
                   className={`flex items-center px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
                 >
                   <User className="h-5 w-5 mr-2 text-secondary" />
-                  Sign In
+                  {t("signIn")}
                 </Link>
                 <Link
                   href="/register"
                   onClick={closeMobileMenu}
                   className={`block px-3 py-2 rounded-md text-base font-medium text-light-text hover:bg-background`}
                 >
-                  Register
+                  {t("register")}
                 </Link>
               </>
             )}
@@ -859,7 +880,7 @@ export default function Navigation() {
           <button
             onClick={toggleMessagesPopover}
             className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-dark transition-colors"
-            aria-label="Messages"
+            aria-label={t("messages")}
           >
             <MessageCircle className="h-7 w-7" />
             {unreadMessagesTotal > 0 && (

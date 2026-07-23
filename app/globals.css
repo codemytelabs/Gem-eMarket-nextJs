@@ -3,6 +3,13 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  /* Base font stack — Inter for Latin text, with Tamil/Sinhala fonts as
+     fallbacks so the browser renders each script in the right typeface
+     per-glyph without any locale-conditional class-switching. */
+  --font-sans:
+    var(--font-inter), var(--font-tamil), var(--font-sinhala), ui-sans-serif,
+    system-ui, sans-serif;
+
   /* Primary - Royal Blue */
   --color-primary-50: #eaf1f8;
   --color-primary-100: #cfe0ef;
