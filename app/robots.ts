@@ -7,7 +7,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/admin/", "/dashboard/"],
+      // Routes now sit behind a locale prefix (/en/admin, /ta/admin, ...),
+      // so a bare "/admin/" rule no longer matches — wildcard past the
+      // locale segment instead.
+      disallow: ["/api/", "/*/admin/", "/*/dashboard/"],
     },
     sitemap: `${BASE}/sitemap.xml`,
   };
