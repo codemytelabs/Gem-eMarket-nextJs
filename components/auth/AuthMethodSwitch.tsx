@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { colors } from "@/lib/theme/colors";
 
 interface AuthMethodSwitchProps {
@@ -13,15 +14,16 @@ export function AuthMethodSwitch({
   onChange,
   disabled = false,
 }: AuthMethodSwitchProps) {
+  const t = useTranslations("auth.common");
   const options: { key: "email" | "phone"; label: string }[] = [
-    { key: "email", label: "Email" },
-    { key: "phone", label: "Phone" },
+    { key: "email", label: t("email") },
+    { key: "phone", label: t("phone") },
   ];
 
   return (
     <div
       role="tablist"
-      aria-label="Sign in method"
+      aria-label={t("signInMethodLabel")}
       className="inline-flex w-full rounded-lg border border-gray-300 bg-gray-50 p-1"
     >
       {options.map((option) => {

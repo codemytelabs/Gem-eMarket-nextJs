@@ -1,19 +1,44 @@
 import { MetadataRoute } from "next";
 import { db } from "@/lib/db";
+import { routing } from "@/i18n/routing";
 
 export const dynamic = "force-dynamic";
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://lumevelo.com";
 
+// Emits one sitemap entry per locale for a given path, each annotated with
+// hreflang alternates pointing at its siblings — this is what lets Google
+// index the /ta/ and /si/ versions as translations instead of duplicate
+// content competing with /en/.
+function localizedUrls(
+  path: string,
+  opts: Pick<
+    MetadataRoute.Sitemap[number],
+    "lastModified" | "priority" | "changeFrequency"
+  >,
+): MetadataRoute.Sitemap {
+  const languages = Object.fromEntries(
+    routing.locales.map((locale) => [locale, `${BASE}/${locale}${path}`]),
+  );
+  return routing.locales.map((locale) => ({
+    url: `${BASE}/${locale}${path}`,
+    ...opts,
+    alternates: { languages },
+  }));
+}
+
 const staticHubs: MetadataRoute.Sitemap = [
-  { url: `${BASE}/`, priority: 1.0, changeFrequency: "daily" },
-  { url: `${BASE}/gems`, priority: 1.0, changeFrequency: "daily" },
-  { url: `${BASE}/jewellery`, priority: 0.9, changeFrequency: "daily" },
-  { url: `${BASE}/precious-metals`, priority: 0.9, changeFrequency: "daily" },
-  { url: `${BASE}/services`, priority: 0.8, changeFrequency: "daily" },
-  { url: `${BASE}/sellers`, priority: 0.8, changeFrequency: "weekly" },
-  { url: `${BASE}/blogs`, priority: 0.7, changeFrequency: "weekly" },
-  { url: `${BASE}/about`, priority: 0.6, changeFrequency: "monthly" },
+  ...localizedUrls("/", { priority: 1.0, changeFrequency: "daily" }),
+  ...localizedUrls("/gems", { priority: 1.0, changeFrequency: "daily" }),
+  ...localizedUrls("/jewellery", { priority: 0.9, changeFrequency: "daily" }),
+  ...localizedUrls("/precious-metals", {
+    priority: 0.9,
+    changeFrequency: "daily",
+  }),
+  ...localizedUrls("/services", { priority: 0.8, changeFrequency: "daily" }),
+  ...localizedUrls("/sellers", { priority: 0.8, changeFrequency: "weekly" }),
+  ...localizedUrls("/blogs", { priority: 0.7, changeFrequency: "weekly" }),
+  ...localizedUrls("/about", { priority: 0.6, changeFrequency: "monthly" }),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -33,28 +58,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     ]);
 
-    const listingUrls: MetadataRoute.Sitemap = listings.map((l) => ({
-      url: `${BASE}/listings/${l.slug}`,
-      lastModified: l.updatedAt,
-      priority: 0.8,
-      changeFrequency: "weekly",
-    }));
+    const listingUrls: MetadataRoute.Sitemap = listings.flatMap((l) =>
+      localizedUrls(`/listings/${l.slug}`, {
+        lastModified: l.updatedAt,
+        priority: 0.8,
+        changeFrequency: "weekly",
+      }),
+    );
 
     const shopUrls: MetadataRoute.Sitemap = sellers
       .filter((s) => s.shopSlug)
-      .map((s) => ({
-        url: `${BASE}/shop/${s.shopSlug}`,
-        lastModified: s.updatedAt,
-        priority: 0.7,
-        changeFrequency: "weekly",
-      }));
+      .flatMap((s) =>
+        localizedUrls(`/shop/${s.shopSlug}`, {
+          lastModified: s.updatedAt,
+          priority: 0.7,
+          changeFrequency: "weekly",
+        }),
+      );
 
-    const blogUrls: MetadataRoute.Sitemap = posts.map((p) => ({
-      url: `${BASE}/blogs/${p.slug}`,
-      lastModified: p.updatedAt,
-      priority: 0.6,
-      changeFrequency: "monthly",
-    }));
+    const blogUrls: MetadataRoute.Sitemap = posts.flatMap((p) =>
+      localizedUrls(`/blogs/${p.slug}`, {
+        lastModified: p.updatedAt,
+        priority: 0.6,
+        changeFrequency: "monthly",
+      }),
+    );
 
     return [...staticHubs, ...listingUrls, ...shopUrls, ...blogUrls];
   } catch {
